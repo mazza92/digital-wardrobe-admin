@@ -1,0 +1,92 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Outfit {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  imageUrl    String
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  products    Product[]
+  analytics   OutfitAnalytics[]
+  
+  @@map("outfits")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  brand       String
+  price       String?
+  affiliateLink String?
+  x           Float
+  y           Float
+  outfitId    String
+  
+  outfit      Outfit   @relation(fields: [outfitId], references: [id], onDelete: Cascade)
+  analytics   ProductAnalytics[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("products")
+}
+
+model OutfitAnalytics {
+  id        String   @id @default(cuid())
+  outfitId  String
+  clicks    Int      @default(0)
+  revenue   Float    @default(0)
+  date      DateTime @default(now())
+  
+  outfit    Outfit   @relation(fields: [outfitId], references: [id], onDelete: Cascade)
+  
+  @@map("outfit_analytics")
+}
+
+model ProductAnalytics {
+  id        String   @id @default(cuid())
+  productId String
+  clicks    Int      @default(0)
+  revenue   Float    @default(0)
+  date      DateTime @default(now())
+  
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@map("product_analytics")
+}
+
+model Brand {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  logoUrl     String?
+  affiliateApi String? // Which affiliate API to use (LTK, Affilae, etc.)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("brands")
+}
