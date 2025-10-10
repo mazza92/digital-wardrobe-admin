@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 
-export const runtime = 'nodejs'
-
 export async function GET() {
   try {
     const outfits = await prisma.outfit.findMany({
@@ -30,7 +28,7 @@ export async function GET() {
         title: outfit.title,
         image: outfit.imageUrl,
         description: outfit.description || '',
-        products: outfit.products.map((product: any) => ({
+        products: outfit.products.map(product => ({
           id: product.id,
           name: product.name,
           brand: product.brand,

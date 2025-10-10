@@ -469,7 +469,7 @@ export default function OutfitsPage() {
       setNewOutfit({
         title: draftOutfit.title,
         description: draftOutfit.description,
-        imageUrl: draftOutfit.imageUrl
+        imageUrl: draftOutfit.imageUrl || ''
       })
       setTags(draftOutfit.tags)
       if (draftOutfit.imageUrl) {
@@ -523,12 +523,11 @@ export default function OutfitsPage() {
     if (currentTag.name && currentTag.brand) {
       if (editingTagIndex !== null) {
         // Update existing tag
-        setTags(prev => prev.map((tag, index) => {
-          if (index === editingTagIndex) {
-            return { ...currentTag, id: (tag as any).id } as any
-          }
-          return tag
-        }))
+        setTags(prev => prev.map((tag, index) => 
+          index === editingTagIndex 
+            ? { ...currentTag, id: (tag as any).id }
+            : tag
+        ))
       } else {
         // Add new tag
         setTags(prev => [...prev, { ...currentTag, id: Date.now().toString() }])
@@ -1005,10 +1004,10 @@ export default function OutfitsPage() {
                       ? 'bg-green-100 text-green-800' 
                       : 'bg-yellow-100 text-yellow-800'
                   }`}>
-                    {outfit.isPublished ? 'Live' : 'Draft'}
+                    {outfit.isPublished ? 'En Ligne' : 'Brouillon'}
                   </span>
                   <span className="text-xs text-gray-500">
-                    {outfit.products.length} items
+                    {outfit.products.length} articles
                   </span>
                 </div>
                 
@@ -1037,19 +1036,19 @@ export default function OutfitsPage() {
                         : 'bg-gray-100 text-gray-600'
                     }`}
                   >
-                    {outfit.isPublished ? 'Published' : 'Draft'}
+                    {outfit.isPublished ? 'Publié' : 'Brouillon'}
                   </button>
                   <button
                     onClick={() => handleEditOutfit(outfit)}
                     className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-xs font-medium"
                   >
-                    Edit
+                    Modifier
                   </button>
                   <button
                     onClick={() => deleteOutfit(outfit.id)}
                     className="px-3 py-1 bg-red-100 text-red-800 rounded-lg text-xs font-medium"
                   >
-                    Delete
+                    Supprimer
                   </button>
                 </div>
               )}
@@ -1292,7 +1291,7 @@ export default function OutfitsPage() {
                                       onClick={() => handleTagEdit(index)}
                                       className="text-xs text-blue-600 hover:text-blue-800 px-2 py-1 rounded"
                                     >
-                                      Edit
+                                      Modifier
                                     </button>
                                     <button
                                       onClick={() => handleTagDelete(index)}

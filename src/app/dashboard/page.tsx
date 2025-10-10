@@ -28,7 +28,6 @@ interface TopOutfit {
   imageUrl: string
   clicks: number
   revenue: number
-  createdAt: string
 }
 
 export default function DashboardPage() {
@@ -68,24 +67,21 @@ export default function DashboardPage() {
           title: 'Belted Mini Dress',
           imageUrl: 'https://www.na-kd.com/cdn-cgi/image/quality=80,sharpen=0.3,width=984/globalassets/belted_structured_mini_dress_1858-000012-0765_3_campaign.jpg',
           clicks: 234,
-          revenue: 1250.75,
-          createdAt: new Date().toISOString()
+          revenue: 1250.75
         },
         {
           id: '2',
           title: 'Oversized Trench Coat',
           imageUrl: 'https://www.na-kd.com/cdn-cgi/image/quality=80,sharpen=0.3,width=984/globalassets/oversized_belted_trenchcoat_1858-000002-0765_3_campaign.jpg',
           clicks: 189,
-          revenue: 980.25,
-          createdAt: new Date().toISOString()
+          revenue: 980.25
         },
         {
           id: '3',
           title: 'High Slit Maxi Dress',
           imageUrl: 'https://www.na-kd.com/cdn-cgi/image/quality=80,sharpen=0.3,width=984/globalassets/checked_high_slit_maxi_dress_1858-000008-7733_3_campaign.jpg',
           clicks: 156,
-          revenue: 875.50,
-          createdAt: new Date().toISOString()
+          revenue: 875.50
         }
       ])
     } catch (error) {
@@ -166,15 +162,15 @@ export default function DashboardPage() {
   return (
     <div className="p-4 md:p-6">
       <div className="mb-6 md:mb-8">
-        <h1 className="text-xl md:text-2xl font-bold text-gray-900">Dashboard</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900">Tableau de Bord</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Your Digital Wardrobe at a glance
+          Votre Garde-Robe Numérique en un coup d'œil
         </p>
       </div>
 
       {/* Quick Actions - Mobile Optimized */}
       <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 md:p-6 mb-6 md:mb-8">
-        <h2 className="text-base md:text-lg font-semibold text-gray-900 mb-3 md:mb-4">Quick Actions</h2>
+        <h2 className="text-base md:text-lg font-semibold text-gray-900 mb-3 md:mb-4">Actions Rapides</h2>
         <div className="grid grid-cols-1 gap-3 md:gap-4">
               <button 
                 onClick={() => router.push('/dashboard/outfits')}
@@ -184,8 +180,8 @@ export default function DashboardPage() {
                   <Plus className="h-5 w-5 text-blue-600" />
                 </div>
                 <div className="text-left flex-1">
-                  <div className="font-semibold text-gray-900 text-base">Publish New Outfit</div>
-                  <div className="text-sm text-gray-500 mt-1">Upload photo & tag products</div>
+                  <div className="font-semibold text-gray-900 text-base">Publier une Nouvelle Tenue</div>
+                  <div className="text-sm text-gray-500 mt-1">Télécharger photo & étiqueter produits</div>
                 </div>
                 <div className="text-blue-600 text-lg">→</div>
               </button>
@@ -197,8 +193,8 @@ export default function DashboardPage() {
               <BarChart3 className="h-5 w-5 text-purple-600" />
             </div>
             <div className="text-left flex-1">
-              <div className="font-semibold text-gray-900 text-base">View Reports</div>
-              <div className="text-sm text-gray-500 mt-1">Analytics & performance</div>
+              <div className="font-semibold text-gray-900 text-base">Voir les Rapports</div>
+              <div className="text-sm text-gray-500 mt-1">Analyses & performances</div>
             </div>
             <div className="text-purple-600 text-lg">→</div>
           </button>
@@ -208,28 +204,28 @@ export default function DashboardPage() {
       {/* KPI Cards - Mobile Optimized */}
       <div className="grid grid-cols-2 gap-3 md:gap-5 lg:grid-cols-4 mb-6 md:mb-8">
         <StatCard
-          title="Total Revenue"
-          value={`$${stats.totalRevenue.toLocaleString()}`}
+          title="Revenus Totaux"
+          value={`${stats.totalRevenue.toLocaleString()} €`}
           change="+12.5%"
           icon={DollarSign}
           color="green"
         />
         <StatCard
-          title="Total Clicks"
+          title="Clics Totaux"
           value={stats.totalClicks.toLocaleString()}
           change="+8.2%"
           icon={MousePointer}
           color="blue"
         />
         <StatCard
-          title="Conversion Rate"
+          title="Taux de Conversion"
           value={`${stats.conversionRate}%`}
           change="+0.3%"
           icon={TrendingUp}
           color="purple"
         />
         <StatCard
-          title="Active Outfits"
+          title="Tenues Actives"
           value={stats.totalOutfits}
           icon={Eye}
           color="orange"
@@ -239,16 +235,16 @@ export default function DashboardPage() {
       {/* Monthly Performance */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div className="bg-white shadow rounded-lg p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Monthly Performance</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Performance Mensuelle</h3>
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-500">This Month Revenue</span>
+              <span className="text-sm text-gray-500">Revenus ce Mois</span>
               <span className="text-lg font-semibold text-gray-900">
-                ${stats.monthlyRevenue.toLocaleString()}
+                {stats.monthlyRevenue.toLocaleString()} €
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-500">Weekly Clicks</span>
+              <span className="text-sm text-gray-500">Clics Hebdomadaires</span>
               <span className="text-lg font-semibold text-gray-900">
                 {stats.weeklyClicks.toLocaleString()}
               </span>
@@ -259,27 +255,27 @@ export default function DashboardPage() {
                 style={{ width: '75%' }}
               ></div>
             </div>
-            <p className="text-xs text-gray-500">75% of monthly goal achieved</p>
+            <p className="text-xs text-gray-500">75% de l'objectif mensuel atteint</p>
           </div>
         </div>
 
         <div className="bg-white shadow rounded-lg p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Activity</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Activité Récente</h3>
           <div className="space-y-3">
             <div className="flex items-center p-3 rounded-lg bg-gray-50">
               <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
-              <span className="text-sm text-gray-600">New outfit "Summer Dress" published</span>
-              <span className="text-xs text-gray-400 ml-auto">2h ago</span>
+              <span className="text-sm text-gray-600">Nouvelle tenue "Robe d'Été" publiée</span>
+              <span className="text-xs text-gray-400 ml-auto">il y a 2h</span>
             </div>
             <div className="flex items-center p-3 rounded-lg bg-gray-50">
               <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-              <span className="text-sm text-gray-600">Product tags updated for "Trench Coat"</span>
-              <span className="text-xs text-gray-400 ml-auto">5h ago</span>
+              <span className="text-sm text-gray-600">Étiquettes produit mises à jour pour "Trench Coat"</span>
+              <span className="text-xs text-gray-400 ml-auto">il y a 5h</span>
             </div>
             <div className="flex items-center p-3 rounded-lg bg-gray-50">
               <div className="w-2 h-2 bg-purple-500 rounded-full mr-3"></div>
-              <span className="text-sm text-gray-600">Monthly report generated</span>
-              <span className="text-xs text-gray-400 ml-auto">1d ago</span>
+              <span className="text-sm text-gray-600">Rapport mensuel généré</span>
+              <span className="text-xs text-gray-400 ml-auto">il y a 1j</span>
             </div>
           </div>
         </div>
@@ -326,7 +322,7 @@ export default function DashboardPage() {
                       </div>
                       <div className="mt-2 text-xs text-gray-400 flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        {new Date(outfit.createdAt).toLocaleDateString('en-US', {
+                        {new Date((outfit as any).createdAt).toLocaleDateString('en-US', {
                           month: 'short',
                           day: 'numeric',
                           year: 'numeric'
