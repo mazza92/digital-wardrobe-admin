@@ -19,26 +19,26 @@
     "@prisma/client": "^6.16.3",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.10",
+    "autoprefixer": "^10.4.20",
     "bcryptjs": "^3.0.2",
     "jose": "^6.1.0",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.544.0",
     "next": "15.5.4",
+    "postcss": "^8.4.49",
     "prisma": "^6.16.3",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "recharts": "^3.2.1"
+    "recharts": "^3.2.1",
+    "tailwindcss": "^3.4.15"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "autoprefixer": "^10.4.20",
     "eslint": "^9",
     "eslint-config-next": "15.5.4",
-    "postcss": "^8.4.49",
-    "tailwindcss": "^3.4.15",
     "tsx": "^4.20.6",
     "typescript": "^5"
   }
