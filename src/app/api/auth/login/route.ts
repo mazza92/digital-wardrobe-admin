@@ -3,18 +3,24 @@ import { authenticateUser, generateToken } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('🔐 Login attempt started')
     const { email, password } = await request.json()
+    console.log('📧 Email:', email)
 
     if (!email || !password) {
+      console.log('❌ Missing email or password')
       return NextResponse.json(
         { error: 'Email and password are required' },
         { status: 400 }
       )
     }
 
+    console.log('🔍 Authenticating user...')
     const user = await authenticateUser(email, password)
+    console.log('👤 User result:', user ? 'found' : 'not found')
     
     if (!user) {
+      console.log('❌ Authentication failed - invalid credentials')
       return NextResponse.json(
         { error: 'Invalid credentials' },
         { status: 401 }
