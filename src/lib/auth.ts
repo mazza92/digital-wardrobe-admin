@@ -38,9 +38,17 @@ export async function verifyToken(token: string): Promise<{ userId: string; emai
 }
 
 export async function getUserByEmail(email: string) {
-  return prisma.user.findUnique({
-    where: { email }
-  })
+  try {
+    console.log('🔍 getUserByEmail called with:', email)
+    const user = await prisma.user.findUnique({
+      where: { email }
+    })
+    console.log('👤 Database query result:', user ? 'user found' : 'no user found')
+    return user
+  } catch (error) {
+    console.error('❌ Database error in getUserByEmail:', error)
+    return null
+  }
 }
 
 export async function createUser(email: string, password: string, name: string) {
@@ -55,15 +63,34 @@ export async function createUser(email: string, password: string, name: string) 
 }
 
 export async function authenticateUser(email: string, password: string): Promise<User | null> {
-  const user = await getUserByEmail(email)
-  if (!user) return null
+  try {
+    console.log('🔍 authenticateUser called with email:', email)
+    
+    const user = await getUserByEmail(email)
+    console.log('👤 getUserByEmail result:', user ? 'found' : 'not found')
+    
+    if (!user) {
+      console.log('❌ User not found in database')
+      return null
+    }
 
-  const isValid = await verifyPassword(password, user.password)
-  if (!isValid) return null
+    console.log('🔐 Verifying password...')
+    const isValid = await verifyPassword(password, user.password)
+    console.log('🔐 Password valid:', isValid)
+    
+    if (!isValid) {
+      console.log('❌ Invalid password')
+      return null
+    }
 
-  return {
-    id: user.id,
-    email: user.email,
-    name: user.name
+    console.log('✅ Authentication successful')
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name
+    }
+  } catch (error) {
+    console.error('❌ Error in authenticateUser:', error)
+    return null
   }
 }
