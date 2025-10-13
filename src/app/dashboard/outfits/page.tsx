@@ -167,6 +167,7 @@ export default function OutfitsPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(true)
+  const [isPublishing, setIsPublishing] = useState(false)
 
   // Helper function to format relative time
   const getRelativeTime = (date: string) => {
@@ -541,6 +542,7 @@ export default function OutfitsPage() {
 
   const handleSaveOutfit = async () => {
     try {
+      setIsPublishing(true)
       console.log('handleSaveOutfit called')
       console.log('editingOutfit:', editingOutfit)
       console.log('newOutfit state:', newOutfit)
@@ -609,6 +611,8 @@ export default function OutfitsPage() {
       }
     } catch (error) {
       console.error('Error saving outfit:', error)
+    } finally {
+      setIsPublishing(false)
     }
   }
 
@@ -713,10 +717,11 @@ export default function OutfitsPage() {
               <div className="flex flex-col md:flex-row gap-2">
                 <button
                   onClick={() => setShowAddModal(true)}
-                  className="w-full md:w-auto inline-flex items-center justify-center px-6 py-3 border border-transparent rounded-xl shadow-sm text-base font-semibold text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black touch-manipulation"
+                  disabled={isPublishing}
+                  className="w-full md:w-auto inline-flex items-center justify-center px-6 py-3 border border-transparent rounded-xl shadow-sm text-base font-semibold text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Plus className="h-5 w-5 mr-2" />
-                  Publier Nouvelle Tenue
+                  {isPublishing ? 'Publication en cours...' : 'Publier Nouvelle Tenue'}
                 </button>
                 {draftOutfit && (
                   <button
@@ -724,7 +729,8 @@ export default function OutfitsPage() {
                       loadDraft()
                       setShowAddModal(true)
                     }}
-                    className="w-full md:w-auto inline-flex items-center justify-center px-6 py-3 border border-transparent rounded-xl shadow-sm text-base font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 touch-manipulation"
+                    disabled={isPublishing}
+                    className="w-full md:w-auto inline-flex items-center justify-center px-6 py-3 border border-transparent rounded-xl shadow-sm text-base font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <FileText className="h-5 w-5 mr-2" />
                     Continuer Brouillon
@@ -1252,7 +1258,7 @@ export default function OutfitsPage() {
                                 style={{ left: `${tag.x}%`, top: `${tag.y}%` }}
                               >
                                 <div
-                                  className="w-6 h-6 bg-red-500 rounded-full cursor-pointer border-3 border-white shadow-lg touch-manipulation"
+                                  className="w-6 h-6 bg-blue-500 rounded-full cursor-pointer border-3 border-white shadow-lg touch-manipulation"
                                   title={`${tag.brand} - ${tag.name} (Cliquer pour modifier)`}
                                   onClick={(e) => {
                                     e.stopPropagation()
@@ -1324,10 +1330,17 @@ export default function OutfitsPage() {
                 </button>
                     <button
                       onClick={handleSaveOutfit}
-                      disabled={!newOutfit.title || !selectedImage}
+                      disabled={!newOutfit.title || !selectedImage || isPublishing}
                       className="w-full md:w-auto px-6 py-3 bg-black text-white rounded-xl text-base font-semibold hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
                     >
-                      {editingOutfit ? 'Mettre à Jour' : 'Publier Tenue'}
+                      {isPublishing ? (
+                        <div className="flex items-center justify-center gap-2">
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          {editingOutfit ? 'Mise à jour...' : 'Publication...'}
+                        </div>
+                      ) : (
+                        editingOutfit ? 'Mettre à Jour' : 'Publier Tenue'
+                      )}
                     </button>
               </div>
             </div>
