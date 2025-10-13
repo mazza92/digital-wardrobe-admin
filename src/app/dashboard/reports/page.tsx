@@ -197,15 +197,15 @@ export default function ReportsPage() {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Reports & Analytics</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Rapports & Analyses</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Detailed insights into your wardrobe performance
+            Analyses détaillées de la performance de votre garde-robe
           </p>
         </div>
         <div className="flex space-x-3">
           <button className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
             <Download className="h-4 w-4 mr-2" />
-            Export Report
+            Exporter Rapport
           </button>
         </div>
       </div>
@@ -220,10 +220,10 @@ export default function ReportsPage() {
               onChange={(e) => setDateRange(e.target.value)}
               className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-black"
             >
-              <option value="7">Last 7 days</option>
-              <option value="30">Last 30 days</option>
-              <option value="90">Last 90 days</option>
-              <option value="365">Last year</option>
+              <option value="7">7 derniers jours</option>
+              <option value="30">30 derniers jours</option>
+              <option value="90">90 derniers jours</option>
+              <option value="365">Dernière année</option>
             </select>
           </div>
           <div className="flex items-center space-x-2">
@@ -233,7 +233,7 @@ export default function ReportsPage() {
               onChange={(e) => setSelectedBrand(e.target.value)}
               className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-black"
             >
-              <option value="all">All Brands</option>
+              <option value="all">Toutes les Marques</option>
               <option value="NA-KD">NA-KD</option>
               <option value="Zara">Zara</option>
               <option value="H&M">H&M</option>
@@ -246,9 +246,9 @@ export default function ReportsPage() {
         {/* Top Products Table */}
         <div className="bg-white rounded-lg shadow">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">Top Performing Products</h3>
+            <h3 className="text-lg font-medium text-gray-900">Produits les Plus Performants</h3>
             <p className="mt-1 text-sm text-gray-500">
-              Most clicked and highest earning products
+              Produits les plus cliqués et les plus rentables
             </p>
           </div>
           <div className="overflow-x-auto">
@@ -256,16 +256,16 @@ export default function ReportsPage() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Product
+                    Produit
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Clicks
+                    Clics
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Revenue
+                    Revenus
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Trend
+                    Tendance
                   </th>
                 </tr>
               </thead>
@@ -292,7 +292,7 @@ export default function ReportsPage() {
                       <div className="flex items-center">
                         <DollarSign className="h-4 w-4 text-gray-400 mr-2" />
                         <span className="text-sm text-gray-900">
-                          ${product.revenue.toLocaleString()}
+                          {product.revenue.toLocaleString()} €
                         </span>
                       </div>
                     </td>
@@ -314,9 +314,9 @@ export default function ReportsPage() {
         {/* Brand Performance Chart */}
         <div className="bg-white rounded-lg shadow">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">Brand Performance</h3>
+            <h3 className="text-lg font-medium text-gray-900">Performance par Marque</h3>
             <p className="mt-1 text-sm text-gray-500">
-              Revenue distribution by brand
+              Répartition des revenus par marque
             </p>
           </div>
           <div className="p-6">
@@ -336,7 +336,7 @@ export default function ReportsPage() {
                   </div>
                   <div className="text-right">
                     <div className="text-sm font-medium text-gray-900">
-                      ${brand.revenue.toLocaleString()}
+                      {brand.revenue.toLocaleString()} €
                     </div>
                     <div className="text-xs text-gray-500">
                       {brand.percentage}%
@@ -367,9 +367,9 @@ export default function ReportsPage() {
       <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg shadow">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">Revenue Trend</h3>
+            <h3 className="text-lg font-medium text-gray-900">Tendance des Revenus</h3>
             <p className="mt-1 text-sm text-gray-500">
-              Daily revenue over time
+              Revenus quotidiens dans le temps
             </p>
           </div>
           <div className="p-6">
@@ -383,7 +383,7 @@ export default function ReportsPage() {
                     }}
                   ></div>
                   <div className="text-xs text-gray-500 mt-2">
-                    {new Date(data.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    {new Date(data.date).toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' })}
                   </div>
                 </div>
               ))}
@@ -393,9 +393,9 @@ export default function ReportsPage() {
 
         <div className="bg-white rounded-lg shadow">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">Click Trend</h3>
+            <h3 className="text-lg font-medium text-gray-900">Tendance des Clics</h3>
             <p className="mt-1 text-sm text-gray-500">
-              Daily clicks over time
+              Clics quotidiens dans le temps
             </p>
           </div>
           <div className="p-6">
@@ -409,7 +409,7 @@ export default function ReportsPage() {
                     }}
                   ></div>
                   <div className="text-xs text-gray-500 mt-2">
-                    {new Date(data.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    {new Date(data.date).toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' })}
                   </div>
                 </div>
               ))}
