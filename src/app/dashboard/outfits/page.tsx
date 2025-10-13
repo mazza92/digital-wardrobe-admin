@@ -697,15 +697,15 @@ export default function OutfitsPage() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
           <div>
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900">My Outfits</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Mes Tenues</h1>
             <p className="mt-1 text-sm text-gray-500">
-              {filteredAndSortedOutfits.length} of {outfits.length} outfits
+              {filteredAndSortedOutfits.length} sur {outfits.length} tenues
             </p>
             {todayOutfits.length > 0 && (
               <div className="mt-2 flex items-center gap-4 text-xs text-gray-600">
                 <span className="flex items-center gap-1">
                   <Calendar className="h-3 w-3" />
-                  Today: {todayOutfits.length} uploaded, {todayPublished} published
+                  Aujourd'hui : {todayOutfits.length} téléchargées, {todayPublished} publiées
                 </span>
               </div>
             )}
@@ -716,7 +716,7 @@ export default function OutfitsPage() {
                   className="w-full md:w-auto inline-flex items-center justify-center px-6 py-3 border border-transparent rounded-xl shadow-sm text-base font-semibold text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black touch-manipulation"
                 >
                   <Plus className="h-5 w-5 mr-2" />
-                  Publish New Outfit
+                  Publier Nouvelle Tenue
                 </button>
                 {draftOutfit && (
                   <button
@@ -727,7 +727,7 @@ export default function OutfitsPage() {
                     className="w-full md:w-auto inline-flex items-center justify-center px-6 py-3 border border-transparent rounded-xl shadow-sm text-base font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 touch-manipulation"
                   >
                     <FileText className="h-5 w-5 mr-2" />
-                    Continue Draft
+                    Continuer Brouillon
                   </button>
                 )}
               </div>
@@ -742,7 +742,7 @@ export default function OutfitsPage() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search outfits..."
+                  placeholder="Rechercher des tenues..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
@@ -760,7 +760,7 @@ export default function OutfitsPage() {
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                All
+                Toutes
               </button>
               <button
                 onClick={() => setStatusFilter('today')}
@@ -770,7 +770,7 @@ export default function OutfitsPage() {
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                Today
+                Aujourd'hui
               </button>
               <button
                 onClick={() => setStatusFilter('published')}
@@ -780,7 +780,7 @@ export default function OutfitsPage() {
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                Published
+                Publiées
               </button>
               <button
                 onClick={() => setStatusFilter('draft')}
@@ -790,7 +790,7 @@ export default function OutfitsPage() {
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                Drafts
+                Brouillons
               </button>
             </div>
 
@@ -802,8 +802,8 @@ export default function OutfitsPage() {
                 onChange={(e) => setSortBy(e.target.value as 'newest' | 'oldest' | 'title')}
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
               >
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
+                <option value="newest">Plus récentes</option>
+                <option value="oldest">Plus anciennes</option>
                 <option value="title">A-Z</option>
               </select>
             </div>
@@ -1071,22 +1071,22 @@ export default function OutfitsPage() {
                 {isLoadingMore ? (
                   <div className="flex items-center justify-center gap-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Loading...
+                    Chargement...
                   </div>
                 ) : (
-                  `Load More (${filteredAndSortedOutfits.length - paginatedOutfits.length} remaining)`
+                  `Charger Plus (${filteredAndSortedOutfits.length - paginatedOutfits.length} restantes)`
                 )}
               </button>
             )}
             <div className="mt-4 text-center text-sm text-gray-500">
-              Showing {paginatedOutfits.length} of {filteredAndSortedOutfits.length} outfits
+              Affichage de {paginatedOutfits.length} sur {filteredAndSortedOutfits.length} tenues
             </div>
           </div>
 
           {/* Desktop: Traditional Pagination */}
           <div className="hidden md:flex items-center justify-between">
             <div className="text-sm text-gray-500">
-              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredAndSortedOutfits.length)} of {filteredAndSortedOutfits.length} outfits
+              Affichage de {((currentPage - 1) * itemsPerPage) + 1} à {Math.min(currentPage * itemsPerPage, filteredAndSortedOutfits.length)} sur {filteredAndSortedOutfits.length} tenues
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -1135,7 +1135,7 @@ export default function OutfitsPage() {
             onClick={() => setCurrentPage(1)}
             className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 touch-manipulation"
           >
-            ↑ Jump to Most Recent
+            ↑ Aller au Plus Récent
           </button>
         </div>
       )}
@@ -1147,11 +1147,11 @@ export default function OutfitsPage() {
                 <div className="flex justify-between items-center mb-6 sticky top-0 bg-white pb-4 border-b border-gray-200">
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900">
-                      {editingOutfit ? 'Edit Outfit' : 'Publish New Outfit'}
+                      {editingOutfit ? 'Modifier Tenue' : 'Publier Nouvelle Tenue'}
                     </h3>
                     {draftOutfit && !editingOutfit && (
                       <p className="text-sm text-blue-600 mt-1">
-                        💾 Draft saved - your progress is safe
+                        💾 Brouillon sauvegardé - votre progression est sauvegardée
                       </p>
                     )}
                   </div>
@@ -1173,14 +1173,14 @@ export default function OutfitsPage() {
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  Outfit Title
+                  Titre de la Tenue
                 </label>
                 <input
                   type="text"
                   value={newOutfit.title}
                   onChange={(e) => setNewOutfit(prev => ({ ...prev, title: e.target.value }))}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-base"
-                  placeholder="e.g., Summer Dress Look"
+                  placeholder="ex: Look Robe d'Été"
                 />
               </div>
 
@@ -1193,24 +1193,24 @@ export default function OutfitsPage() {
                   onChange={(e) => setNewOutfit(prev => ({ ...prev, description: e.target.value }))}
                   rows={3}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-base resize-none"
-                  placeholder="Describe your look..."
+                  placeholder="Décrivez votre look..."
                 />
               </div>
 
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  Upload Photo
+                  Télécharger Photo
                 </label>
                 <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-gray-400 transition-colors">
                   <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                   <div>
                     <label htmlFor="image-upload" className="cursor-pointer">
                       <span className="block text-base font-medium text-gray-900 mb-2">
-                        Tap to upload photo
+                        Appuyez pour télécharger une photo
                       </span>
                       <span className="text-sm text-gray-500">
-                        JPG, PNG up to 10MB
+                        JPG, PNG jusqu'à 10MB
                       </span>
                       <input
                         id="image-upload"
@@ -1227,7 +1227,7 @@ export default function OutfitsPage() {
                   {selectedImage && (
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-3">
-                        Tag Products
+                        Étiqueter Produits
                       </label>
                       <div className="relative w-full mx-auto">
                         <div className="relative w-full bg-gray-100 rounded-xl overflow-hidden">
@@ -1241,7 +1241,7 @@ export default function OutfitsPage() {
                             <img
                               ref={imageRef}
                               src={selectedImage}
-                              alt="Outfit preview"
+                              alt="Aperçu de la tenue"
                               className="w-full h-auto max-h-80 md:max-h-96 object-contain cursor-crosshair touch-manipulation"
                               onClick={handleImageClick}
                             />
@@ -1253,7 +1253,7 @@ export default function OutfitsPage() {
                               >
                                 <div
                                   className="w-6 h-6 bg-red-500 rounded-full cursor-pointer border-3 border-white shadow-lg touch-manipulation"
-                                  title={`${tag.brand} - ${tag.name} (Click to edit)`}
+                                  title={`${tag.brand} - ${tag.name} (Cliquer pour modifier)`}
                                   onClick={(e) => {
                                     e.stopPropagation()
                                     handleTagEdit(index)
@@ -1265,20 +1265,20 @@ export default function OutfitsPage() {
                         </div>
                         <div className="flex items-center justify-between mt-3">
                           <p className="text-sm text-gray-500">
-                            Tap to add tag • Scroll to zoom
+                            Appuyez pour ajouter une étiquette • Faites défiler pour zoomer
                           </p>
                           <button
                             onClick={resetImageTransform}
                             className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs hover:bg-gray-200 touch-manipulation"
                           >
-                            Reset Zoom
+                            Réinitialiser Zoom
                           </button>
                         </div>
                         
                         {/* Tags List */}
                         {tags.length > 0 && (
                           <div className="mt-4">
-                            <h4 className="text-sm font-semibold text-gray-700 mb-2">Product Tags ({tags.length})</h4>
+                            <h4 className="text-sm font-semibold text-gray-700 mb-2">Étiquettes Produit ({tags.length})</h4>
                             <div className="space-y-2 max-h-32 overflow-y-auto">
                               {tags.map((tag, index) => (
                                 <div key={index} className="flex items-center justify-between bg-gray-50 rounded-lg p-2">
@@ -1297,7 +1297,7 @@ export default function OutfitsPage() {
                                       onClick={() => handleTagDelete(index)}
                                       className="text-xs text-red-600 hover:text-red-800 px-2 py-1 rounded"
                                     >
-                                      Remove
+                                      Supprimer
                                     </button>
                                   </div>
                                 </div>
@@ -1320,14 +1320,14 @@ export default function OutfitsPage() {
                   }}
                   className="w-full md:w-auto px-6 py-3 border border-gray-300 rounded-xl text-base font-medium text-gray-700 hover:bg-gray-50 touch-manipulation"
                 >
-                  Cancel
+                  Annuler
                 </button>
                     <button
                       onClick={handleSaveOutfit}
                       disabled={!newOutfit.title || !selectedImage}
                       className="w-full md:w-auto px-6 py-3 bg-black text-white rounded-xl text-base font-semibold hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
                     >
-                      {editingOutfit ? 'Update Outfit' : 'Publish Outfit'}
+                      {editingOutfit ? 'Mettre à Jour' : 'Publier Tenue'}
                     </button>
               </div>
             </div>
@@ -1343,10 +1343,10 @@ export default function OutfitsPage() {
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">
-                  {editingTagIndex !== null ? 'Edit Product' : 'Add Product'}
+                  {editingTagIndex !== null ? 'Modifier Produit' : 'Ajouter Produit'}
                 </h3>
                 <p className="text-sm text-gray-500 mt-1">
-                  {tags.length} tag{tags.length !== 1 ? 's' : ''} added • Tap on image to position
+                  {tags.length} étiquette{tags.length !== 1 ? 's' : ''} ajoutée{tags.length !== 1 ? 's' : ''} • Appuyez sur l'image pour positionner
                 </p>
               </div>
               <button
@@ -1366,7 +1366,7 @@ export default function OutfitsPage() {
               {/* Brand Input with Suggestions */}
               <div className="relative">
                 <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  Brand Name
+                  Nom de la Marque
                 </label>
                 <input
                   type="text"
@@ -1374,7 +1374,7 @@ export default function OutfitsPage() {
                   onChange={(e) => handleInputChange('brand', e.target.value)}
                   onFocus={() => handleInputFocus('brand')}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-base"
-                  placeholder="e.g., ZARA"
+                  placeholder="ex: ZARA"
                   autoFocus
                 />
                 {showSuggestions && suggestionType === 'brand' && (
@@ -1403,7 +1403,7 @@ export default function OutfitsPage() {
               {/* Product Name with Suggestions */}
               <div className="relative">
                 <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  Product Name
+                  Nom du Produit
                 </label>
                 <input
                   type="text"
@@ -1411,7 +1411,7 @@ export default function OutfitsPage() {
                   onChange={(e) => handleInputChange('name', e.target.value)}
                   onFocus={() => handleInputFocus('name')}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-base"
-                  placeholder="e.g., Summer Dress"
+                  placeholder="ex: Robe d'Été"
                 />
                 {showSuggestions && suggestionType === 'name' && (
                   <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 overflow-y-auto">
@@ -1444,14 +1444,14 @@ export default function OutfitsPage() {
               {/* Price Input */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  Price (Optional)
+                  Prix (Optionnel)
                 </label>
                 <input
                   type="text"
                   value={currentTag.price}
                   onChange={(e) => setCurrentTag(prev => ({ ...prev, price: e.target.value }))}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-base"
-                  placeholder="e.g., $29.99"
+                  placeholder="ex: 29,99 €"
                 />
               </div>
 
@@ -1462,7 +1462,7 @@ export default function OutfitsPage() {
                     onClick={clearDraft}
                     className="px-3 py-2 bg-red-100 text-red-700 rounded-lg text-sm hover:bg-red-200 touch-manipulation"
                   >
-                    🗑️ Clear Draft
+                    🗑️ Effacer Brouillon
                   </button>
                 )}
               </div>
@@ -1472,7 +1472,7 @@ export default function OutfitsPage() {
                   onClick={() => setShowTagModal(false)}
                   className="w-full md:w-auto px-6 py-3 border border-gray-300 rounded-xl text-base font-medium text-gray-700 hover:bg-gray-50 touch-manipulation"
                 >
-                  Cancel
+                  Annuler
                 </button>
                 <button
                   onClick={handleSaveTag}
@@ -1480,7 +1480,7 @@ export default function OutfitsPage() {
                   className="w-full md:w-auto px-6 py-3 bg-black text-white rounded-xl text-base font-semibold hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
                 >
                   <Tag className="h-4 w-4 mr-2 inline" />
-                  {editingTagIndex !== null ? 'Update Tag' : 'Add Tag'}
+                  {editingTagIndex !== null ? 'Mettre à Jour' : 'Ajouter Étiquette'}
                 </button>
               </div>
             </div>

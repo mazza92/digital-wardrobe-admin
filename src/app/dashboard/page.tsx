@@ -286,16 +286,16 @@ export default function DashboardPage() {
             <div className="px-6 py-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-medium text-gray-900">Recent Outfits</h3>
+                  <h3 className="text-lg font-medium text-gray-900">Tenues Récentes</h3>
                   <p className="mt-1 text-sm text-gray-500">
-                    Your latest uploaded looks
+                    Vos dernières tenues téléchargées
                   </p>
                 </div>
                 <button
                   onClick={() => router.push('/dashboard/outfits')}
                   className="text-sm font-medium text-black hover:text-gray-700"
                 >
-                  View All →
+                  Voir Tout →
                 </button>
               </div>
             </div>
@@ -315,9 +315,9 @@ export default function DashboardPage() {
                         {outfit.title}
                       </h4>
                       <div className="mt-1 flex justify-between text-sm text-gray-500">
-                        <span>{outfit.clicks} clicks</span>
+                        <span>{outfit.clicks} clics</span>
                         <span className="font-medium text-green-600">
-                          ${outfit.revenue.toLocaleString()}
+                          {outfit.revenue.toLocaleString()} €
                         </span>
                       </div>
                       <div className="mt-2 text-xs text-gray-400 flex items-center gap-1">

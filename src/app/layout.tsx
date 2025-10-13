@@ -5,8 +5,8 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Digital Wardrobe Admin',
-  description: 'Admin panel for Digital Wardrobe management',
+  title: 'Admin Garde-Robe Numérique',
+  description: 'Panneau d\'administration pour la gestion de la Garde-Robe Numérique',
 }
 
 export default function RootLayout({

@@ -31,10 +31,10 @@ export default function LoginPage() {
         router.push('/dashboard')
         router.refresh() // Force a refresh to ensure the middleware runs
       } else {
-        setError(data.error || 'Login failed')
+        setError(data.error || 'Échec de la connexion')
       }
     } catch (error) {
-      setError('An error occurred. Please try again.')
+      setError('Une erreur s\'est produite. Veuillez réessayer.')
     } finally {
       setIsLoading(false)
     }
@@ -126,12 +126,12 @@ export default function LoginPage() {
                 <div className="w-full border-t border-gray-300" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Demo Credentials</span>
+                <span className="px-2 bg-white text-gray-500">Identifiants de démonstration</span>
               </div>
             </div>
             <div className="mt-4 text-center text-sm text-gray-600">
-              <p>Email: admin@emmanuellek.com</p>
-              <p>Password: admin123</p>
+              <p>E-mail : admin@emmanuellek.com</p>
+              <p>Mot de passe : admin123</p>
             </div>
           </div>
         </div>
