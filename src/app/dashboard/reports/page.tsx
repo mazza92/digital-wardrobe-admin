@@ -9,7 +9,8 @@ import {
   TrendingDown,
   DollarSign,
   MousePointer,
-  Eye
+  Eye,
+  X
 } from 'lucide-react'
 
 interface ReportData {
@@ -56,10 +57,52 @@ export default function ReportsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [dateRange, setDateRange] = useState('30')
   const [selectedBrand, setSelectedBrand] = useState('all')
+  const [showCalendar, setShowCalendar] = useState(false)
+  const [customStartDate, setCustomStartDate] = useState('')
+  const [customEndDate, setCustomEndDate] = useState('')
+  const [isCustomRange, setIsCustomRange] = useState(false)
 
   useEffect(() => {
     fetchReportData()
-  }, [dateRange, selectedBrand])
+  }, [dateRange, selectedBrand, customStartDate, customEndDate, isCustomRange])
+
+  const handleDateRangeChange = (value: string) => {
+    if (value === 'custom') {
+      setIsCustomRange(true)
+      setShowCalendar(true)
+    } else {
+      setIsCustomRange(false)
+      setShowCalendar(false)
+      setDateRange(value)
+    }
+  }
+
+  const handleCustomDateApply = () => {
+    if (customStartDate && customEndDate) {
+      setDateRange('custom')
+      setShowCalendar(false)
+    }
+  }
+
+  const handleCustomDateClear = () => {
+    setCustomStartDate('')
+    setCustomEndDate('')
+    setIsCustomRange(false)
+    setShowCalendar(false)
+    setDateRange('30')
+  }
+
+  const getDateRangeLabel = () => {
+    if (isCustomRange && customStartDate && customEndDate) {
+      const start = new Date(customStartDate).toLocaleDateString('fr-FR')
+      const end = new Date(customEndDate).toLocaleDateString('fr-FR')
+      return `${start} - ${end}`
+    }
+    return dateRange === '7' ? '7 derniers jours' :
+           dateRange === '30' ? '30 derniers jours' :
+           dateRange === '90' ? '90 derniers jours' :
+           dateRange === '365' ? 'Dernière année' : 'Période personnalisée'
+  }
 
   const fetchReportData = async () => {
     try {
@@ -217,14 +260,26 @@ export default function ReportsPage() {
             <Calendar className="h-5 w-5 text-gray-400" />
             <select
               value={dateRange}
-              onChange={(e) => setDateRange(e.target.value)}
+              onChange={(e) => handleDateRangeChange(e.target.value)}
               className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-black"
             >
               <option value="7">7 derniers jours</option>
               <option value="30">30 derniers jours</option>
               <option value="90">90 derniers jours</option>
               <option value="365">Dernière année</option>
+              <option value="custom">Période personnalisée</option>
             </select>
+            {isCustomRange && (
+              <div className="flex items-center space-x-2 ml-2">
+                <span className="text-sm text-gray-600">{getDateRangeLabel()}</span>
+                <button
+                  onClick={handleCustomDateClear}
+                  className="p-1 text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
           </div>
           <div className="flex items-center space-x-2">
             <Filter className="h-5 w-5 text-gray-400" />
@@ -240,6 +295,59 @@ export default function ReportsPage() {
             </select>
           </div>
         </div>
+
+        {/* Custom Date Range Calendar */}
+        {showCalendar && (
+          <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-sm font-medium text-gray-900">Sélectionner une période personnalisée</h4>
+              <button
+                onClick={() => setShowCalendar(false)}
+                className="p-1 text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <label className="block text-xs font-medium text-gray-700 mb-2">
+                  Date de début
+                </label>
+                <input
+                  type="date"
+                  value={customStartDate}
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-black"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="block text-xs font-medium text-gray-700 mb-2">
+                  Date de fin
+                </label>
+                <input
+                  type="date"
+                  value={customEndDate}
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-black"
+                />
+              </div>
+              <div className="flex items-end">
+                <button
+                  onClick={handleCustomDateApply}
+                  disabled={!customStartDate || !customEndDate}
+                  className="px-4 py-2 bg-black text-white rounded-md text-sm font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Appliquer
+                </button>
+              </div>
+            </div>
+            {customStartDate && customEndDate && new Date(customStartDate) > new Date(customEndDate) && (
+              <p className="mt-2 text-xs text-red-600">
+                La date de début doit être antérieure à la date de fin
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
