@@ -1386,7 +1386,7 @@ export default function OutfitsPage() {
                               ref={imageRef}
                               src={selectedImage}
                               alt="Aperçu de la tenue"
-                              className="w-full h-auto max-h-80 md:max-h-96 object-contain cursor-crosshair touch-manipulation"
+                              className="w-full h-auto max-h-96 object-contain cursor-crosshair touch-manipulation"
                               onClick={handleImageClick}
                             />
                             {tags.map((tag, index) => (
