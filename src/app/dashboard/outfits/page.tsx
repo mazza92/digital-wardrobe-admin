@@ -430,7 +430,14 @@ export default function OutfitsPage() {
 
   // Enhanced drag functionality for tags (desktop + mobile)
   const handleTagStart = (event: React.MouseEvent | React.TouchEvent, tagIndex: number) => {
-    event.preventDefault()
+    // Only preventDefault for mouse events, not touch events to avoid passive listener issues
+    if (event.type === 'mousedown') {
+      try {
+        event.preventDefault()
+      } catch (e) {
+        // Ignore passive event listener errors
+      }
+    }
     event.stopPropagation()
     setDraggedTagIndex(tagIndex)
     setIsDragging(true)
@@ -441,7 +448,14 @@ export default function OutfitsPage() {
   const handleGlobalMove = (event: MouseEvent | TouchEvent) => {
     if (!isDragging || draggedTagIndex === null || !selectedImage || !imageRef.current) return
     
-    event.preventDefault()
+    // Only preventDefault for mouse events to avoid passive listener issues
+    if (event.type === 'mousemove') {
+      try {
+        event.preventDefault()
+      } catch (e) {
+        // Ignore passive event listener errors
+      }
+    }
     setHasMoved(true)
     
     const rect = imageRef.current.getBoundingClientRect()
@@ -451,6 +465,8 @@ export default function OutfitsPage() {
       clientX = event.clientX
       clientY = event.clientY
     } else {
+      // Check if touches exist to avoid errors
+      if (!event.touches || event.touches.length === 0) return
       clientX = event.touches[0].clientX
       clientY = event.touches[0].clientY
     }
