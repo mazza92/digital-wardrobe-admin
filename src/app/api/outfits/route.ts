@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { title, description, imageUrl, isPublished, products } = await request.json()
+    const { title, description, imageUrl, category, isPublished, products } = await request.json()
 
     if (!title || !imageUrl) {
       return NextResponse.json(
@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
         title,
         description,
         imageUrl,
+        category: category || 'outfit', // Default to 'outfit' if not provided
         isPublished: isPublished !== undefined ? isPublished : true, // Default to published
         products: {
           create: (products || []).map((product: any) => ({

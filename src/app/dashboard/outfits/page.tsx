@@ -50,7 +50,8 @@ export default function OutfitsPage() {
   const [newOutfit, setNewOutfit] = useState({
     title: '',
     description: '',
-    imageUrl: ''
+    imageUrl: '',
+    category: 'outfit'
   })
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [tags, setTags] = useState<Omit<Product, 'id'>[]>([])
@@ -579,7 +580,8 @@ export default function OutfitsPage() {
       setNewOutfit({
         title: draftOutfit.title,
         description: draftOutfit.description,
-        imageUrl: draftOutfit.imageUrl || ''
+        imageUrl: draftOutfit.imageUrl || '',
+        category: draftOutfit.category || 'outfit'
       })
       setTags(draftOutfit.tags)
       if (draftOutfit.imageUrl) {
@@ -665,6 +667,7 @@ export default function OutfitsPage() {
           title: newOutfit.title,
           description: newOutfit.description,
           imageUrl: selectedImage,
+          category: newOutfit.category,
           isPublished: editingOutfit.isPublished,
           products: tags
         }
@@ -683,7 +686,7 @@ export default function OutfitsPage() {
           await fetchOutfits()
           setEditingOutfit(null)
           // Reset form and close modal only on success
-          setNewOutfit({ title: '', description: '', imageUrl: '' })
+          setNewOutfit({ title: '', description: '', imageUrl: '', category: 'outfit' })
           setSelectedImage(null)
           setTags([])
           clearDraft()
@@ -704,6 +707,7 @@ export default function OutfitsPage() {
             title: newOutfit.title,
             description: newOutfit.description,
             imageUrl: selectedImage,
+            category: newOutfit.category,
             isPublished: true, // Auto-publish new outfits
             products: tags
           })
@@ -713,7 +717,7 @@ export default function OutfitsPage() {
           // Refresh the outfits list
           await fetchOutfits()
           // Reset form and close modal only on success
-          setNewOutfit({ title: '', description: '', imageUrl: '' })
+          setNewOutfit({ title: '', description: '', imageUrl: '', category: 'outfit' })
           setSelectedImage(null)
           setTags([])
           clearDraft()
@@ -1308,7 +1312,7 @@ export default function OutfitsPage() {
                   saveDraft() // Auto-save before closing
                   setShowAddModal(false)
                   setEditingOutfit(null)
-                  setNewOutfit({ title: '', description: '', imageUrl: '' })
+                  setNewOutfit({ title: '', description: '', imageUrl: '', category: 'outfit' })
                   setSelectedImage(null)
                   setTags([])
                 }}
@@ -1330,6 +1334,20 @@ export default function OutfitsPage() {
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-base"
                   placeholder="ex: Look Robe d'Été"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  Catégorie
+                </label>
+                <select
+                  value={newOutfit.category}
+                  onChange={(e) => setNewOutfit(prev => ({ ...prev, category: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-base"
+                >
+                  <option value="outfit">Tenue</option>
+                  <option value="wishlist">Wishlist</option>
+                </select>
               </div>
 
               <div>
@@ -1489,7 +1507,7 @@ export default function OutfitsPage() {
                   onClick={() => {
                     setShowAddModal(false)
                     setEditingOutfit(null)
-                    setNewOutfit({ title: '', description: '', imageUrl: '' })
+                    setNewOutfit({ title: '', description: '', imageUrl: '', category: 'outfit' })
                     setSelectedImage(null)
                     setTags([])
                   }}

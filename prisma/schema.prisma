@@ -27,6 +27,7 @@ model Outfit {
   title       String
   description String?
   imageUrl    String
+  category    String   @default("outfit") // "outfit" or "wishlist"
   isPublished Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

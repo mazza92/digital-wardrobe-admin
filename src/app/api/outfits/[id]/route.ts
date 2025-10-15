@@ -41,7 +41,7 @@ export async function PUT(
 ) {
   try {
     const { id } = await params
-    const { title, description, imageUrl, isPublished, products } = await request.json()
+    const { title, description, imageUrl, category, isPublished, products } = await request.json()
     
     console.log('Updating outfit:', { id, title, description, imageUrl, isPublished, products })
 
@@ -51,6 +51,7 @@ export async function PUT(
         title,
         description,
         imageUrl,
+        category: category || 'outfit', // Default to 'outfit' if not provided
         isPublished,
         products: {
           deleteMany: {},
