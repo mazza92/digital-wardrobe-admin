@@ -3,6 +3,18 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
+// Handle CORS preflight requests
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  })
+}
+
 // GET /api/profile - Get influencer profile
 export async function GET() {
   try {
@@ -19,6 +31,12 @@ export async function GET() {
           bio: existingProfile.bio,
           heroImage: existingProfile.heroImage,
           socialMedia: existingProfile.socialMedia || {}
+        }, {
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          }
         })
       }
     } catch (dbError) {
@@ -39,12 +57,25 @@ export async function GET() {
       }
     }
 
-    return NextResponse.json(defaultProfile)
+    return NextResponse.json(defaultProfile, {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      }
+    })
   } catch (error) {
     console.error('Error fetching profile:', error)
     return NextResponse.json(
       { error: 'Failed to fetch profile' },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        }
+      }
     )
   }
 }
@@ -59,7 +90,14 @@ export async function PUT(request: NextRequest) {
     if (!name || !brand || !bio) {
       return NextResponse.json(
         { error: 'Name, brand, and bio are required' },
-        { status: 400 }
+        { 
+          status: 400,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          }
+        }
       )
     }
 
@@ -93,6 +131,12 @@ export async function PUT(request: NextRequest) {
           heroImage: profile.heroImage, 
           socialMedia: profile.socialMedia || {}
         }
+      }, {
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        }
       })
     } catch (dbError) {
       console.log('Database save failed, Profile table may not exist:', dbError.message)
@@ -108,13 +152,26 @@ export async function PUT(request: NextRequest) {
           heroImage, 
           socialMedia: socialMedia || {}
         }
+      }, {
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        }
       })
     }
   } catch (error) {
     console.error('Error updating profile:', error)
     return NextResponse.json(
       { error: 'Failed to update profile' },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        }
+      }
     )
   }
 }
