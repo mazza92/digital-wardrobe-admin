@@ -170,6 +170,8 @@ export default function OutfitsPage() {
   const [isPublishing, setIsPublishing] = useState(false)
   const [draggedTagIndex, setDraggedTagIndex] = useState<number | null>(null)
   const [isDragging, setIsDragging] = useState(false)
+  const [dragStartTime, setDragStartTime] = useState<number>(0)
+  const [hasMoved, setHasMoved] = useState(false)
 
   // Helper function to format relative time
   const getRelativeTime = (date: string) => {
@@ -406,20 +408,35 @@ export default function OutfitsPage() {
     setShowTagModal(true)
   }
 
-  // Drag functionality for tags
-  const handleTagMouseDown = (event: React.MouseEvent, tagIndex: number) => {
+  // Enhanced drag functionality for tags (desktop + mobile)
+  const handleTagStart = (event: React.MouseEvent | React.TouchEvent, tagIndex: number) => {
     event.preventDefault()
     event.stopPropagation()
     setDraggedTagIndex(tagIndex)
     setIsDragging(true)
+    setDragStartTime(Date.now())
+    setHasMoved(false)
   }
 
-  const handleImageMouseMove = (event: React.MouseEvent<HTMLImageElement>) => {
-    if (!isDragging || draggedTagIndex === null || !selectedImage) return
+  const handleGlobalMove = (event: MouseEvent | TouchEvent) => {
+    if (!isDragging || draggedTagIndex === null || !selectedImage || !imageRef.current) return
     
-    const rect = event.currentTarget.getBoundingClientRect()
-    const x = Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100))
-    const y = Math.max(0, Math.min(100, ((event.clientY - rect.top) / rect.height) * 100))
+    event.preventDefault()
+    setHasMoved(true)
+    
+    const rect = imageRef.current.getBoundingClientRect()
+    let clientX: number, clientY: number
+    
+    if (event instanceof MouseEvent) {
+      clientX = event.clientX
+      clientY = event.clientY
+    } else {
+      clientX = event.touches[0].clientX
+      clientY = event.touches[0].clientY
+    }
+    
+    const x = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100))
+    const y = Math.max(0, Math.min(100, ((clientY - rect.top) / rect.height) * 100))
     
     setTags(prevTags => 
       prevTags.map((tag, index) => 
@@ -430,19 +447,30 @@ export default function OutfitsPage() {
     )
   }
 
-  const handleImageMouseUp = () => {
+  const handleGlobalEnd = () => {
     if (isDragging) {
       setIsDragging(false)
       setDraggedTagIndex(null)
+      setHasMoved(false)
     }
   }
 
-  const handleImageMouseLeave = () => {
+  // Add/remove global event listeners
+  useEffect(() => {
     if (isDragging) {
-      setIsDragging(false)
-      setDraggedTagIndex(null)
+      document.addEventListener('mousemove', handleGlobalMove)
+      document.addEventListener('mouseup', handleGlobalEnd)
+      document.addEventListener('touchmove', handleGlobalMove, { passive: false })
+      document.addEventListener('touchend', handleGlobalEnd)
+      
+      return () => {
+        document.removeEventListener('mousemove', handleGlobalMove)
+        document.removeEventListener('mouseup', handleGlobalEnd)
+        document.removeEventListener('touchmove', handleGlobalMove)
+        document.removeEventListener('touchend', handleGlobalEnd)
+      }
     }
-  }
+  }, [isDragging, draggedTagIndex, selectedImage])
 
   const handleTagDelete = (tagIndex: number) => {
     setTags(prev => prev.filter((_, index) => index !== tagIndex))
@@ -1290,9 +1318,6 @@ export default function OutfitsPage() {
                               alt="Aperçu de la tenue"
                               className="w-full h-auto max-h-80 md:max-h-96 object-contain cursor-crosshair touch-manipulation"
                               onClick={handleImageClick}
-                              onMouseMove={handleImageMouseMove}
-                              onMouseUp={handleImageMouseUp}
-                              onMouseLeave={handleImageMouseLeave}
                             />
                             {tags.map((tag, index) => (
                               <div
@@ -1301,15 +1326,17 @@ export default function OutfitsPage() {
                                 style={{ left: `${tag.x}%`, top: `${tag.y}%` }}
                               >
                                 <div
-                                  className={`w-6 h-6 bg-blue-500 rounded-full border-3 border-white shadow-lg touch-manipulation ${
+                                  className={`w-6 h-6 bg-blue-500 rounded-full border-3 border-white shadow-lg touch-manipulation select-none ${
                                     isDragging && draggedTagIndex === index 
-                                      ? 'cursor-grabbing scale-110' 
+                                      ? 'cursor-grabbing scale-110 z-10' 
                                       : 'cursor-grab'
                                   }`}
                                   title={`${tag.brand} - ${tag.name} (Glisser pour déplacer ou cliquer pour modifier)`}
-                                  onMouseDown={(e) => handleTagMouseDown(e, index)}
+                                  onMouseDown={(e) => handleTagStart(e, index)}
+                                  onTouchStart={(e) => handleTagStart(e, index)}
                                   onClick={(e) => {
-                                    if (!isDragging) {
+                                    const clickDuration = Date.now() - dragStartTime
+                                    if (!isDragging && !hasMoved && clickDuration < 200) {
                                       e.stopPropagation()
                                       handleTagEdit(index)
                                     }
