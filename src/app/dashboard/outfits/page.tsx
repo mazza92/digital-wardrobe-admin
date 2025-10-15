@@ -1396,11 +1396,20 @@ export default function OutfitsPage() {
                                 style={{ left: `${tag.x}%`, top: `${tag.y}%` }}
                               >
                                 <div
-                                  className={`w-6 h-6 bg-blue-500 rounded-full border-3 border-white shadow-lg touch-manipulation select-none ${
+                                  className={`w-7 h-7 rounded-full border-3 border-white shadow-lg touch-manipulation select-none relative ${
                                     isDragging && draggedTagIndex === index 
                                       ? 'cursor-grabbing scale-110 z-10' 
                                       : 'cursor-grab'
                                   }`}
+                                  style={{
+                                    background: isDragging && draggedTagIndex === index 
+                                      ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
+                                      : 'linear-gradient(135deg, #1a1a1a 0%, #333 100%)',
+                                    boxShadow: isDragging && draggedTagIndex === index 
+                                      ? '0 0 0 6px rgba(59, 130, 246, 0.15), 0 6px 30px rgba(59, 130, 246, 0.25)'
+                                      : '0 4px 20px rgba(0, 0, 0, 0.3)',
+                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                                  }}
                                   title={`${tag.brand} - ${tag.name} (Glisser pour déplacer ou cliquer pour modifier)`}
                                   onMouseDown={(e) => handleTagStart(e, index)}
                                   onTouchStart={(e) => handleTagStart(e, index)}
@@ -1411,7 +1420,12 @@ export default function OutfitsPage() {
                                       handleTagEdit(index)
                                     }
                                   }}
-                                />
+                                >
+                                  {/* White dot in center */}
+                                  <div className="absolute inset-0 flex items-center justify-center">
+                                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                                  </div>
+                                </div>
                               </div>
                             ))}
                           </div>
