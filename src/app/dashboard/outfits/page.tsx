@@ -27,6 +27,7 @@ interface Outfit {
   title: string
   description?: string
   imageUrl: string
+  category: string
   isPublished: boolean
   products: Product[]
   createdAt: string
@@ -742,7 +743,8 @@ export default function OutfitsPage() {
     const outfitData = {
       title: outfit.title,
       description: outfit.description || '',
-      imageUrl: outfit.imageUrl
+      imageUrl: outfit.imageUrl,
+      category: outfit.category || 'outfit'
     }
     console.log('Setting newOutfit to:', outfitData)
     setNewOutfit(outfitData)
@@ -1131,9 +1133,18 @@ export default function OutfitsPage() {
             {/* Content */}
             <div className={`p-4 ${viewMode === 'list' ? 'flex-1 flex flex-col justify-between' : ''}`}>
               <div>
-                <h3 className="text-base font-semibold text-gray-900 truncate">
-                  {outfit.title}
-                </h3>
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="text-base font-semibold text-gray-900 truncate flex-1">
+                    {outfit.title}
+                  </h3>
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ml-2 ${
+                    outfit.category === 'wishlist' 
+                      ? 'bg-purple-100 text-purple-800' 
+                      : 'bg-blue-100 text-blue-800'
+                  }`}>
+                    {outfit.category === 'wishlist' ? 'Wishlist' : 'Tenue'}
+                  </span>
+                </div>
                 <p className={`text-sm text-gray-500 mt-1 ${viewMode === 'list' ? 'line-clamp-1' : 'line-clamp-2'}`}>
                   {outfit.description}
                 </p>
