@@ -430,13 +430,11 @@ export default function OutfitsPage() {
 
   // Enhanced drag functionality for tags (desktop + mobile)
   const handleTagStart = (event: React.MouseEvent | React.TouchEvent, tagIndex: number) => {
-    // Only preventDefault for mouse events, not touch events to avoid passive listener issues
-    if (event.type === 'mousedown') {
-      try {
-        event.preventDefault()
-      } catch (e) {
-        // Ignore passive event listener errors
-      }
+    // Prevent default behavior for both mouse and touch to avoid page scrolling
+    try {
+      event.preventDefault()
+    } catch (e) {
+      // Ignore passive event listener errors
     }
     event.stopPropagation()
     setDraggedTagIndex(tagIndex)
@@ -448,13 +446,11 @@ export default function OutfitsPage() {
   const handleGlobalMove = (event: MouseEvent | TouchEvent) => {
     if (!isDragging || draggedTagIndex === null || !selectedImage || !imageRef.current) return
     
-    // Only preventDefault for mouse events to avoid passive listener issues
-    if (event.type === 'mousemove') {
-      try {
-        event.preventDefault()
-      } catch (e) {
-        // Ignore passive event listener errors
-      }
+    // Prevent default behavior for both mouse and touch to avoid page scrolling
+    try {
+      event.preventDefault()
+    } catch (e) {
+      // Ignore passive event listener errors
     }
     setHasMoved(true)
     
@@ -494,12 +490,20 @@ export default function OutfitsPage() {
   // Add/remove global event listeners
   useEffect(() => {
     if (isDragging) {
+      // Prevent body scrolling during drag
+      document.body.style.overflow = 'hidden'
+      document.body.style.touchAction = 'none'
+      
       document.addEventListener('mousemove', handleGlobalMove)
       document.addEventListener('mouseup', handleGlobalEnd)
       document.addEventListener('touchmove', handleGlobalMove, { passive: false })
       document.addEventListener('touchend', handleGlobalEnd)
       
       return () => {
+        // Restore body scrolling
+        document.body.style.overflow = ''
+        document.body.style.touchAction = ''
+        
         document.removeEventListener('mousemove', handleGlobalMove)
         document.removeEventListener('mouseup', handleGlobalEnd)
         document.removeEventListener('touchmove', handleGlobalMove)
@@ -1379,7 +1383,8 @@ export default function OutfitsPage() {
                             className="relative w-full overflow-hidden"
                             style={{
                               transform: `scale(${imageScale})`,
-                              transformOrigin: 'center center'
+                              transformOrigin: 'center center',
+                              touchAction: isDragging ? 'none' : 'auto'
                             }}
                           >
                             <img
@@ -1387,6 +1392,9 @@ export default function OutfitsPage() {
                               src={selectedImage}
                               alt="Aperçu de la tenue"
                               className="w-full h-auto max-h-96 object-contain cursor-crosshair touch-manipulation"
+                              style={{
+                                touchAction: isDragging ? 'none' : 'auto'
+                              }}
                               onClick={handleImageClick}
                             />
                             {tags.map((tag, index) => (
