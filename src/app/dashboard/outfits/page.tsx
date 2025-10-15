@@ -168,6 +168,8 @@ export default function OutfitsPage() {
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(true)
   const [isPublishing, setIsPublishing] = useState(false)
+  const [draggedTagIndex, setDraggedTagIndex] = useState<number | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
 
   // Helper function to format relative time
   const getRelativeTime = (date: string) => {
@@ -367,7 +369,7 @@ export default function OutfitsPage() {
   }
 
   const handleImageClick = (event: React.MouseEvent<HTMLImageElement>) => {
-    if (!selectedImage) return
+    if (!selectedImage || isDragging) return
     
     const rect = event.currentTarget.getBoundingClientRect()
     const x = ((event.clientX - rect.left) / rect.width) * 100
@@ -402,6 +404,44 @@ export default function OutfitsPage() {
     })
     setEditingTagIndex(tagIndex)
     setShowTagModal(true)
+  }
+
+  // Drag functionality for tags
+  const handleTagMouseDown = (event: React.MouseEvent, tagIndex: number) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setDraggedTagIndex(tagIndex)
+    setIsDragging(true)
+  }
+
+  const handleImageMouseMove = (event: React.MouseEvent<HTMLImageElement>) => {
+    if (!isDragging || draggedTagIndex === null || !selectedImage) return
+    
+    const rect = event.currentTarget.getBoundingClientRect()
+    const x = Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100))
+    const y = Math.max(0, Math.min(100, ((event.clientY - rect.top) / rect.height) * 100))
+    
+    setTags(prevTags => 
+      prevTags.map((tag, index) => 
+        index === draggedTagIndex 
+          ? { ...tag, x, y }
+          : tag
+      )
+    )
+  }
+
+  const handleImageMouseUp = () => {
+    if (isDragging) {
+      setIsDragging(false)
+      setDraggedTagIndex(null)
+    }
+  }
+
+  const handleImageMouseLeave = () => {
+    if (isDragging) {
+      setIsDragging(false)
+      setDraggedTagIndex(null)
+    }
   }
 
   const handleTagDelete = (tagIndex: number) => {
@@ -1250,6 +1290,9 @@ export default function OutfitsPage() {
                               alt="Aperçu de la tenue"
                               className="w-full h-auto max-h-80 md:max-h-96 object-contain cursor-crosshair touch-manipulation"
                               onClick={handleImageClick}
+                              onMouseMove={handleImageMouseMove}
+                              onMouseUp={handleImageMouseUp}
+                              onMouseLeave={handleImageMouseLeave}
                             />
                             {tags.map((tag, index) => (
                               <div
@@ -1258,11 +1301,18 @@ export default function OutfitsPage() {
                                 style={{ left: `${tag.x}%`, top: `${tag.y}%` }}
                               >
                                 <div
-                                  className="w-6 h-6 bg-blue-500 rounded-full cursor-pointer border-3 border-white shadow-lg touch-manipulation"
-                                  title={`${tag.brand} - ${tag.name} (Cliquer pour modifier)`}
+                                  className={`w-6 h-6 bg-blue-500 rounded-full border-3 border-white shadow-lg touch-manipulation ${
+                                    isDragging && draggedTagIndex === index 
+                                      ? 'cursor-grabbing scale-110' 
+                                      : 'cursor-grab'
+                                  }`}
+                                  title={`${tag.brand} - ${tag.name} (Glisser pour déplacer ou cliquer pour modifier)`}
+                                  onMouseDown={(e) => handleTagMouseDown(e, index)}
                                   onClick={(e) => {
-                                    e.stopPropagation()
-                                    handleTagEdit(index)
+                                    if (!isDragging) {
+                                      e.stopPropagation()
+                                      handleTagEdit(index)
+                                    }
                                   }}
                                 />
                               </div>
@@ -1271,7 +1321,7 @@ export default function OutfitsPage() {
                         </div>
                         <div className="flex items-center justify-between mt-3">
                           <p className="text-sm text-gray-500">
-                            Appuyez pour ajouter une étiquette • Faites défiler pour zoomer
+                            Appuyez pour ajouter une étiquette • Glissez les étiquettes pour les déplacer • Faites défiler pour zoomer
                           </p>
                           <button
                             onClick={resetImageTransform}
