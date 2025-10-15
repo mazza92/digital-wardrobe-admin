@@ -90,3 +90,16 @@ model Brand {
   
   @@map("brands")
 }
+
+model Profile {
+  id          String   @id @default(cuid())
+  name        String
+  brand       String
+  bio         String
+  heroImage   String
+  socialMedia Json?    // Store social media links as JSON
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("profiles")
+}

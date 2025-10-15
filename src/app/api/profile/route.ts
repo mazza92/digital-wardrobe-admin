@@ -6,9 +6,23 @@ const prisma = new PrismaClient()
 // GET /api/profile - Get influencer profile
 export async function GET() {
   try {
-    // For now, we'll return default profile data
-    // In a real app, you'd fetch from database
-    const profile = {
+    // Try to fetch from database first
+    const existingProfile = await prisma.profile.findFirst({
+      orderBy: { createdAt: 'desc' }
+    })
+
+    if (existingProfile) {
+      return NextResponse.json({
+        name: existingProfile.name,
+        brand: existingProfile.brand,
+        bio: existingProfile.bio,
+        heroImage: existingProfile.heroImage,
+        socialMedia: existingProfile.socialMedia || {}
+      })
+    }
+
+    // Return default profile data if none exists
+    const defaultProfile = {
       name: 'Emmanuelle K',
       brand: 'EMMANUELLE K',
       bio: 'Luxury fashion & lifestyle content creator. Sharing elegant, sophisticated style for the modern woman.',
@@ -21,7 +35,7 @@ export async function GET() {
       }
     }
 
-    return NextResponse.json(profile)
+    return NextResponse.json(defaultProfile)
   } catch (error) {
     console.error('Error fetching profile:', error)
     return NextResponse.json(
@@ -45,26 +59,35 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    // For now, we'll just return success
-    // In a real app, you'd save to database
-    console.log('Profile update received:', {
-      name,
-      brand,
-      bio,
-      heroImage,
-      socialMedia
+    // Save to database - upsert to create or update
+    const profile = await prisma.profile.upsert({
+      where: { id: 'default' }, // We'll use a fixed ID for the main profile
+      update: { 
+        name, 
+        brand, 
+        bio, 
+        heroImage, 
+        socialMedia: socialMedia || {}
+      },
+      create: { 
+        id: 'default',
+        name, 
+        brand, 
+        bio, 
+        heroImage, 
+        socialMedia: socialMedia || {}
+      }
     })
-
-    // TODO: Save to database
-    // await prisma.influencerProfile.upsert({
-    //   where: { id: 'default' },
-    //   update: { name, brand, bio, heroImage, socialMedia },
-    //   create: { id: 'default', name, brand, bio, heroImage, socialMedia }
-    // })
 
     return NextResponse.json({ 
       message: 'Profile updated successfully',
-      profile: { name, brand, bio, heroImage, socialMedia }
+      profile: { 
+        name: profile.name, 
+        brand: profile.brand, 
+        bio: profile.bio, 
+        heroImage: profile.heroImage, 
+        socialMedia: profile.socialMedia || {}
+      }
     })
   } catch (error) {
     console.error('Error updating profile:', error)
