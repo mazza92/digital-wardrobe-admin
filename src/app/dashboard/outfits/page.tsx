@@ -177,6 +177,7 @@ export default function OutfitsPage() {
     type: 'success' | 'error' | 'info'
     message: string
   }>({ show: false, type: 'success', message: '' })
+  const [togglingOutfitId, setTogglingOutfitId] = useState<string | null>(null)
 
   // Toast notification helper
   const showToast = (type: 'success' | 'error' | 'info', message: string) => {
@@ -331,7 +332,7 @@ export default function OutfitsPage() {
       )
       await fetchOutfits()
       setSelectedOutfits([])
-      showToast('success', `${selectedOutfits.length} tenue${selectedOutfits.length > 1 ? 's' : ''} dépubliée${selectedOutfits.length > 1 ? 's' : ''} avec succès !`)
+      showToast('success', `${selectedOutfits.length} tenue${selectedOutfits.length > 1 ? 's' : ''} retirée${selectedOutfits.length > 1 ? 's' : ''} du feed !`)
     } catch (error) {
       console.error('Error bulk unpublishing:', error)
       showToast('error', 'Erreur lors de la dépublication des tenues')
@@ -728,6 +729,7 @@ export default function OutfitsPage() {
 
   const togglePublish = async (outfitId: string) => {
     try {
+      setTogglingOutfitId(outfitId)
       const outfit = outfits.find(o => o.id === outfitId)
       if (!outfit) return
       
@@ -744,7 +746,7 @@ export default function OutfitsPage() {
       if (response.ok) {
         // Refresh the outfits list
         await fetchOutfits()
-        showToast('success', outfit.isPublished ? 'Tenue dépubliée avec succès !' : 'Tenue publiée avec succès !')
+        showToast('success', outfit.isPublished ? 'Tenue retirée du feed !' : 'Tenue publiée avec succès !')
       } else {
         console.error('Failed to toggle publish status')
         showToast('error', 'Erreur lors du changement de statut de la tenue')
@@ -752,6 +754,8 @@ export default function OutfitsPage() {
     } catch (error) {
       console.error('Error toggling publish status:', error)
       showToast('error', 'Erreur lors du changement de statut de la tenue')
+    } finally {
+      setTogglingOutfitId(null)
     }
   }
 
@@ -1069,13 +1073,20 @@ export default function OutfitsPage() {
                 <div className="absolute top-3 right-3 flex flex-col space-y-2">
                   <button
                     onClick={() => togglePublish(outfit.id)}
-                    className={`p-2.5 rounded-full shadow-lg touch-manipulation ${
+                    disabled={togglingOutfitId === outfit.id}
+                    className={`p-2.5 rounded-full shadow-lg touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed ${
                       outfit.isPublished 
                         ? 'bg-green-500 text-white' 
                         : 'bg-gray-500 text-white'
                     }`}
                   >
-                    {outfit.isPublished ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                    {togglingOutfitId === outfit.id ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    ) : outfit.isPublished ? (
+                      <Eye className="h-4 w-4" />
+                    ) : (
+                      <EyeOff className="h-4 w-4" />
+                    )}
                   </button>
                   <button
                     onClick={() => handleEditOutfit(outfit)}
@@ -1137,13 +1148,23 @@ export default function OutfitsPage() {
                 <div className="mt-3 flex gap-2">
                   <button
                     onClick={() => togglePublish(outfit.id)}
-                    className={`px-3 py-1 rounded-lg text-xs font-medium ${
+                    disabled={togglingOutfitId === outfit.id}
+                    className={`px-3 py-1 rounded-lg text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed ${
                       outfit.isPublished 
                         ? 'bg-green-100 text-green-800' 
                         : 'bg-gray-100 text-gray-600'
                     }`}
                   >
-                    {outfit.isPublished ? 'Publié' : 'Brouillon'}
+                    {togglingOutfitId === outfit.id ? (
+                      <div className="flex items-center gap-1">
+                        <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                        <span>Chargement...</span>
+                      </div>
+                    ) : outfit.isPublished ? (
+                      'Publié'
+                    ) : (
+                      'Brouillon'
+                    )}
                   </button>
                   <button
                     onClick={() => handleEditOutfit(outfit)}
