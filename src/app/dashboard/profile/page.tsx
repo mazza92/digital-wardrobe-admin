@@ -145,22 +145,6 @@ export default function ProfilePage() {
           <div className="bg-gradient-to-r from-gray-900 to-gray-700 px-8 py-6">
             <h1 className="text-2xl font-bold text-white">Profil de l'Influenceur</h1>
             <p className="text-gray-300 mt-1">Gérez les informations de votre profil public</p>
-            
-            {/* Influencer Info Display */}
-            <div className="mt-6 space-y-2">
-              <div className="flex items-center space-x-4">
-                <img
-                  src={profile.heroImage}
-                  alt="Profile"
-                  className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-lg"
-                />
-                <div>
-                  <h2 className="text-xl font-semibold text-white">{profile.name}</h2>
-                  <p className="text-gray-300 text-sm">{profile.brand}</p>
-                </div>
-              </div>
-              <p className="text-gray-200 text-sm leading-relaxed">{profile.bio}</p>
-            </div>
           </div>
 
           <div className="p-8">
@@ -208,7 +192,7 @@ export default function ProfilePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="block text-sm font-semibold text-gray-700">
-                    Nom du profil *
+                    Nom de l'Influenceur *
                   </label>
                   <input
                     type="text"
@@ -222,7 +206,7 @@ export default function ProfilePage() {
 
                 <div className="space-y-2">
                   <label className="block text-sm font-semibold text-gray-700">
-                    Titre *
+                    Marque *
                   </label>
                   <input
                     type="text"
