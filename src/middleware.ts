@@ -33,10 +33,12 @@ export const config = {
     /*
      * Match all request paths except for the ones starting with:
      * - api/auth/login (login endpoint)
+     * - api/outfits/export (public outfits endpoint)
+     * - api/profile (public profile endpoint)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      */
-    '/((?!api/auth/login|_next/static|_next/image|favicon.ico).*)',
+    '/((?!api/auth/login|api/outfits/export|api/profile|_next/static|_next/image|favicon.ico).*)',
   ],
 }
