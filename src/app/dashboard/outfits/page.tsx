@@ -311,8 +311,10 @@ export default function OutfitsPage() {
       )
       await fetchOutfits()
       setSelectedOutfits([])
+      showToast('success', `${selectedOutfits.length} tenue${selectedOutfits.length > 1 ? 's' : ''} publiée${selectedOutfits.length > 1 ? 's' : ''} avec succès !`)
     } catch (error) {
       console.error('Error bulk publishing:', error)
+      showToast('error', 'Erreur lors de la publication des tenues')
     }
   }
 
@@ -329,13 +331,15 @@ export default function OutfitsPage() {
       )
       await fetchOutfits()
       setSelectedOutfits([])
+      showToast('success', `${selectedOutfits.length} tenue${selectedOutfits.length > 1 ? 's' : ''} dépubliée${selectedOutfits.length > 1 ? 's' : ''} avec succès !`)
     } catch (error) {
       console.error('Error bulk unpublishing:', error)
+      showToast('error', 'Erreur lors de la dépublication des tenues')
     }
   }
 
   const handleBulkDelete = async () => {
-    if (confirm(`Are you sure you want to delete ${selectedOutfits.length} outfits?`)) {
+    if (confirm(`Êtes-vous sûr de vouloir supprimer ${selectedOutfits.length} tenue${selectedOutfits.length > 1 ? 's' : ''} ?`)) {
       try {
         await Promise.all(
           selectedOutfits.map(id => 
@@ -344,8 +348,10 @@ export default function OutfitsPage() {
         )
         await fetchOutfits()
         setSelectedOutfits([])
+        showToast('success', `${selectedOutfits.length} tenue${selectedOutfits.length > 1 ? 's' : ''} supprimée${selectedOutfits.length > 1 ? 's' : ''} avec succès !`)
       } catch (error) {
         console.error('Error bulk deleting:', error)
+        showToast('error', 'Erreur lors de la suppression des tenues')
       }
     }
   }
@@ -738,16 +744,19 @@ export default function OutfitsPage() {
       if (response.ok) {
         // Refresh the outfits list
         await fetchOutfits()
+        showToast('success', outfit.isPublished ? 'Tenue dépubliée avec succès !' : 'Tenue publiée avec succès !')
       } else {
         console.error('Failed to toggle publish status')
+        showToast('error', 'Erreur lors du changement de statut de la tenue')
       }
     } catch (error) {
       console.error('Error toggling publish status:', error)
+      showToast('error', 'Erreur lors du changement de statut de la tenue')
     }
   }
 
   const deleteOutfit = async (outfitId: string) => {
-    if (confirm('Are you sure you want to delete this outfit?')) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette tenue ?')) {
       try {
         const response = await fetch(`/api/outfits/${outfitId}`, {
           method: 'DELETE'
@@ -756,11 +765,14 @@ export default function OutfitsPage() {
         if (response.ok) {
           // Refresh the outfits list
           await fetchOutfits()
+          showToast('success', 'Tenue supprimée avec succès !')
         } else {
           console.error('Failed to delete outfit')
+          showToast('error', 'Erreur lors de la suppression de la tenue')
         }
       } catch (error) {
         console.error('Error deleting outfit:', error)
+        showToast('error', 'Erreur lors de la suppression de la tenue')
       }
     }
   }
