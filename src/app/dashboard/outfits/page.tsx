@@ -70,6 +70,7 @@ export default function OutfitsPage() {
     title: string
     description: string
     imageUrl: string
+    category: string
     tags: Omit<Product, 'id'>[]
   } | null>(null)
   const imageRef = useRef<HTMLImageElement>(null)
@@ -163,7 +164,7 @@ export default function OutfitsPage() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'draft' | 'today'>('all')
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'title'>('newest')
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(12)
+  const [itemsPerPage] = useState(12)
   const [selectedOutfits, setSelectedOutfits] = useState<string[]>([])
   const [showBulkActions, setShowBulkActions] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
@@ -250,8 +251,14 @@ export default function OutfitsPage() {
   // Filter and sort outfits
   const filteredAndSortedOutfits = outfits
     .filter(outfit => {
-      const matchesSearch = outfit.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           outfit.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      const searchLower = searchTerm.toLowerCase()
+      const matchesSearch = searchTerm === '' || 
+        outfit.title.toLowerCase().includes(searchLower) ||
+        outfit.description?.toLowerCase().includes(searchLower) ||
+        outfit.products.some(product => 
+          product.name.toLowerCase().includes(searchLower) ||
+          product.brand.toLowerCase().includes(searchLower)
+        )
       const matchesStatus = statusFilter === 'all' || 
                            (statusFilter === 'published' && outfit.isPublished) ||
                            (statusFilter === 'draft' && !outfit.isPublished) ||
@@ -571,6 +578,7 @@ export default function OutfitsPage() {
         title: newOutfit.title,
         description: newOutfit.description,
         imageUrl: selectedImage || '',
+        category: newOutfit.category,
         tags: [...tags]
       })
     }
@@ -879,7 +887,7 @@ export default function OutfitsPage() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Rechercher des tenues..."
+                  placeholder="Rechercher par titre, description, marque ou produit..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
@@ -947,47 +955,6 @@ export default function OutfitsPage() {
 
             {/* View Controls - Mobile Optimized */}
             <div className="flex items-center gap-2">
-              {/* Mobile Density Selector */}
-              <div className="md:hidden">
-                <select
-                  value={itemsPerPage}
-                  onChange={(e) => setItemsPerPage(Number(e.target.value))}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-                >
-                  <option value={6}>Compact (6)</option>
-                  <option value={12}>Normal (12)</option>
-                  <option value={24}>Dense (24)</option>
-                </select>
-              </div>
-
-              {/* Desktop Grid Density */}
-              <div className="hidden md:flex items-center gap-1">
-                <button
-                  onClick={() => setItemsPerPage(6)}
-                  className={`p-2 rounded-lg text-xs ${
-                    itemsPerPage === 6 ? 'bg-black text-white' : 'bg-gray-100 text-gray-600'
-                  }`}
-                >
-                  Compact
-                </button>
-                <button
-                  onClick={() => setItemsPerPage(12)}
-                  className={`p-2 rounded-lg text-xs ${
-                    itemsPerPage === 12 ? 'bg-black text-white' : 'bg-gray-100 text-gray-600'
-                  }`}
-                >
-                  Normal
-                </button>
-                <button
-                  onClick={() => setItemsPerPage(24)}
-                  className={`p-2 rounded-lg text-xs ${
-                    itemsPerPage === 24 ? 'bg-black text-white' : 'bg-gray-100 text-gray-600'
-                  }`}
-                >
-                  Dense
-                </button>
-              </div>
-              
               {/* View Mode Toggle */}
               <div className="flex items-center gap-1">
                 <button
@@ -1068,11 +1035,7 @@ export default function OutfitsPage() {
 
       {/* Outfits Grid/List - Mobile Optimized */}
       <div className={viewMode === 'grid' 
-        ? `grid grid-cols-1 ${
-            itemsPerPage === 6 ? 'md:grid-cols-3 lg:grid-cols-4' : 
-            itemsPerPage === 12 ? 'md:grid-cols-2 lg:grid-cols-3' : 
-            'md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
-          } gap-4 md:gap-6`
+        ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6'
         : 'space-y-4'
       }>
         {paginatedOutfits.map((outfit) => (

@@ -59,8 +59,8 @@ export default function DashboardLayout({
   const navigation = [
     { name: 'Tableau de Bord', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Tenues', href: '/dashboard/outfits', icon: Shirt },
-    { name: 'Profil', href: '/dashboard/profile', icon: UserCircle },
     { name: 'Rapports', href: '/dashboard/reports', icon: BarChart3 },
+    { name: 'Profil', href: '/dashboard/profile', icon: UserCircle },
   ]
 
   return (
@@ -83,7 +83,7 @@ export default function DashboardLayout({
               <div className="bg-black p-2 rounded-lg">
                 <User className="h-6 w-6 text-white" />
               </div>
-              <span className="ml-2 text-lg font-bold text-gray-900">Garde-Robe Virtuelle</span>
+              <span className="ml-2 text-lg font-bold text-gray-900">Virtual Dressing</span>
             </div>
             <nav className="mt-6 px-2 space-y-2">
               {navigation.map((item) => {
@@ -122,7 +122,7 @@ export default function DashboardLayout({
                 <div className="bg-black p-2 rounded-lg">
                   <User className="h-6 w-6 text-white" />
                 </div>
-                <span className="ml-2 text-xl font-bold text-gray-900">Garde-Robe Virtuelle</span>
+                <span className="ml-2 text-xl font-bold text-gray-900">Virtual Dressing</span>
               </div>
               <nav className="mt-5 flex-1 px-2 space-y-1">
                 {navigation.map((item) => {
@@ -172,7 +172,7 @@ export default function DashboardLayout({
                 <div className="bg-black p-2 rounded-lg">
                   <User className="h-5 w-5 text-white" />
                 </div>
-                <span className="ml-2 text-lg font-bold text-gray-900">Garde-Robe Virtuelle</span>
+                <span className="ml-2 text-lg font-bold text-gray-900">Virtual Dressing</span>
               </div>
               <div className="w-10"></div>
             </div>
