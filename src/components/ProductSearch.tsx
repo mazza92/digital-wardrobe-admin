@@ -28,6 +28,23 @@ export default function ProductSearch({ onSelectProduct, onClose, isOpen }: Prod
   const [selectedBrand, setSelectedBrand] = useState('soeur')
   const searchRef = useRef<HTMLDivElement>(null)
 
+  // Global error handler to prevent image loading cascades
+  useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      if (event.target && (event.target as any).tagName === 'IMG') {
+        event.preventDefault()
+        event.stopPropagation()
+        return false
+      }
+    }
+    
+    window.addEventListener('error', handleError, true)
+    
+    return () => {
+      window.removeEventListener('error', handleError, true)
+    }
+  }, [])
+
   useEffect(() => {
     if (isOpen) {
       setSearchTerm('')
@@ -145,9 +162,16 @@ export default function ProductSearch({ onSelectProduct, onClose, isOpen }: Prod
                           alt={product.name}
                           className="w-full h-full object-cover"
                           crossOrigin="anonymous"
+                          loading="lazy"
                           onLoad={() => {}}
                           onError={(e) => {
-                            (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OTk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='
+                            try {
+                              const target = e.target as HTMLImageElement
+                              target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OTk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='
+                              target.onerror = null // Prevent further error handling
+                            } catch (error) {
+                              // Silently handle any errors in error handling
+                            }
                           }}
                         />
                       ) : (
