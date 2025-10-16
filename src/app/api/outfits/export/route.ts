@@ -14,6 +14,7 @@ export async function OPTIONS() {
 
 export async function GET() {
   try {
+    console.log('Fetching published outfits...')
     const outfits = await prisma.outfit.findMany({
       where: {
         isPublished: true
@@ -25,6 +26,7 @@ export async function GET() {
         createdAt: 'desc'
       }
     })
+    console.log('Found outfits:', outfits.length)
 
     // Transform to match frontend format
     const frontendData = {
@@ -45,7 +47,7 @@ export async function GET() {
           name: product.name,
           brand: product.brand,
           price: product.price || '',
-          imageUrl: product.imageUrl || '',
+          imageUrl: (product as any).imageUrl || '',
           link: product.affiliateLink || '',
           x: product.x,
           y: product.y
@@ -68,9 +70,24 @@ export async function GET() {
     })
   } catch (error) {
     console.error('Error exporting outfits:', error)
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    })
     return NextResponse.json(
-      { error: 'Failed to export outfits' },
-      { status: 500 }
+      { 
+        error: 'Failed to export outfits',
+        details: error.message 
+      },
+      { 
+        status: 500,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        }
+      }
     )
   }
 }
