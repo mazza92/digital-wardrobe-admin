@@ -20,13 +20,16 @@ export async function GET(request: NextRequest) {
       const feedConfig = FEED_CONFIGS[brand]
       
       // Fetch and parse the XML feed
+      console.log('Fetching feed from:', feedConfig.url)
       const response = await fetch(feedConfig.url)
       if (!response.ok) {
         throw new Error(`Failed to fetch feed: ${response.statusText}`)
       }
       
       const xmlText = await response.text()
+      console.log('Feed fetched, length:', xmlText.length)
       const products = parseXMLFeed(xmlText)
+      console.log('Products parsed:', products.length)
       
       // Filter products if search term provided
       let filteredProducts = products
@@ -65,38 +68,41 @@ export async function GET(request: NextRequest) {
 
 function parseXMLFeed(xmlText: string) {
   try {
-    // Simple XML parsing for the specific feed format
     // The feed appears to be space-separated values with product data
     const lines = xmlText.split('\n').filter(line => line.trim())
     const products = []
     
+    console.log('Parsing feed with', lines.length, 'lines')
+    
     for (const line of lines) {
-      if (line.includes('https://www.soeur.fr')) {
-        const parts = line.split(' ')
-        if (parts.length >= 8) {
-          try {
-            const product = {
-              id: parts[1] || `soeur_${Date.now()}_${Math.random()}`,
-              name: extractProductName(line),
-              brand: 'Soeur',
-              price: extractPrice(line),
-              description: extractDescription(line),
-              imageUrl: extractImageUrl(line),
-              affiliateLink: extractAffiliateLink(line),
-              category: extractCategory(line),
-              availability: 'in stock'
-            }
-            
-            if (product.name && product.price) {
-              products.push(product)
-            }
-          } catch (parseError) {
-            console.warn('Error parsing product line:', parseError)
+      // Look for lines that contain product data (brand name, product names, etc.)
+      if (line.includes('Soeur') || line.includes('BAGUE') || line.includes('BOTTINES') || 
+          line.includes('CARDIGAN') || line.includes('PULL') || line.includes('ROBE')) {
+        
+        try {
+          const product = {
+            id: extractProductId(line),
+            name: extractProductName(line),
+            brand: 'Soeur',
+            price: extractPrice(line),
+            description: extractDescription(line),
+            imageUrl: extractImageUrl(line),
+            affiliateLink: extractAffiliateLink(line),
+            category: extractCategory(line),
+            availability: 'in stock'
           }
+          
+          if (product.name && product.price && product.name !== 'Product') {
+            products.push(product)
+            console.log('Added product:', product.name, product.price)
+          }
+        } catch (parseError) {
+          console.warn('Error parsing product line:', parseError, line.substring(0, 100))
         }
       }
     }
     
+    console.log('Total products parsed:', products.length)
     return products
   } catch (error) {
     console.error('Error parsing XML feed:', error)
@@ -104,10 +110,41 @@ function parseXMLFeed(xmlText: string) {
   }
 }
 
+function extractProductId(line: string): string {
+  // Extract product ID from the line (look for long numeric ID)
+  const match = line.match(/(\d{14,})/)
+  return match ? match[1] : `soeur_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+}
+
 function extractProductName(line: string): string {
-  // Extract product name from the line
-  const match = line.match(/https:\/\/www\.soeur\.fr\s+([A-Z\s]+)/)
-  return match ? match[1].trim() : 'Product'
+  // Extract product name from the line - look for patterns like "BAGUE ARGENT", "BOTTINES TEXAS MARRON", etc.
+  const patterns = [
+    /(BAGUE\s+[A-Z\s]+)/,
+    /(BOTTINES\s+[A-Z\s]+)/,
+    /(CARDIGAN\s+[A-Z\s]+)/,
+    /(PULL\s+[A-Z\s]+)/,
+    /(ROBE\s+[A-Z\s]+)/,
+    /(CHAUSSURES\s+[A-Z\s]+)/,
+    /(ACCESSOIRES\s+[A-Z\s]+)/
+  ]
+  
+  for (const pattern of patterns) {
+    const match = line.match(pattern)
+    if (match) {
+      return match[1].trim()
+    }
+  }
+  
+  // Fallback: look for any all-caps words that might be product names
+  const words = line.split(' ').filter(word => 
+    word.length > 3 && 
+    word === word.toUpperCase() && 
+    !word.includes('HTTP') && 
+    !word.includes('HTTPS') &&
+    !word.match(/^\d+$/)
+  )
+  
+  return words.length > 0 ? words.slice(0, 3).join(' ') : 'Product'
 }
 
 function extractPrice(line: string): string {
@@ -117,13 +154,24 @@ function extractPrice(line: string): string {
 }
 
 function extractDescription(line: string): string {
-  // Extract description from the line
+  // Extract description from the line - look for French descriptions
   const parts = line.split(' ')
-  const descriptionStart = parts.findIndex(part => part.includes('https://www.soeur.fr')) + 2
-  const descriptionEnd = parts.findIndex(part => part.includes('https://lb.affilae.com'))
   
-  if (descriptionStart > 1 && descriptionEnd > descriptionStart) {
-    return parts.slice(descriptionStart, descriptionEnd).join(' ').trim()
+  // Look for description patterns (French text)
+  const descriptionStart = parts.findIndex(part => 
+    part.includes('explore') || 
+    part.includes('design') || 
+    part.includes('ligne') ||
+    part.includes('coupe') ||
+    part.includes('tricoté')
+  )
+  
+  if (descriptionStart > -1) {
+    // Find the end of description (before affiliate link)
+    const descriptionEnd = parts.findIndex(part => part.includes('https://lb.affilae.com'))
+    if (descriptionEnd > descriptionStart) {
+      return parts.slice(descriptionStart, descriptionEnd).join(' ').trim()
+    }
   }
   
   return 'Beautiful product from Soeur'
