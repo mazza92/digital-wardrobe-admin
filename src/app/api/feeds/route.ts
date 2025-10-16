@@ -68,56 +68,47 @@ export async function GET(request: NextRequest) {
 
 function parseXMLFeed(xmlText: string) {
   try {
-    // The feed appears to be space-separated values with product data
-    const lines = xmlText.split('\n').filter(line => line.trim())
+    console.log('Parsing XML feed, length:', xmlText.length)
+    
+    // Parse XML by splitting into items
+    const items = xmlText.split('<item>').slice(1) // Remove first empty split
     const products = []
     
-    console.log('Parsing feed with', lines.length, 'lines')
+    console.log('Found', items.length, 'product items')
     
-    for (const line of lines) {
-      // Look for lines that contain product data (brand name, product names, etc.)
-      if (line.includes('Soeur') || line.includes('BAGUE') || line.includes('BOTTINES') || 
-          line.includes('CARDIGAN') || line.includes('PULL') || line.includes('ROBE') ||
-          line.includes('T-SHIRT') || line.includes('PANTALON') || line.includes('VESTE') ||
-          line.includes('MANTEAU') || line.includes('CHAUSSURES') || line.includes('ACCESSOIRES') ||
-          (line.includes('https://') && line.includes('EUR'))) {
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i]
+      
+      try {
+        // Extract data from XML tags
+        const id = extractXMLValue(item, 'g:id') || `soeur_${Date.now()}_${i}`
+        const title = extractXMLValue(item, 'g:title')
+        const description = extractXMLValue(item, 'g:description')
+        const link = extractXMLValue(item, 'g:link')
+        const imageLink = extractXMLValue(item, 'g:image_link')
+        const price = extractXMLValue(item, 'g:price')
+        const brand = extractXMLValue(item, 'g:brand') || 'Soeur'
         
-        try {
-          console.log('Processing line:', line.substring(0, 200))
-          
+        if (title && price) {
           const product = {
-            id: extractProductId(line),
-            name: extractProductName(line),
-            brand: 'Soeur',
-            price: extractPrice(line),
-            description: extractDescription(line),
-            imageUrl: extractImageUrl(line),
-            affiliateLink: extractAffiliateLink(line),
-            category: extractCategory(line),
+            id: id,
+            name: title,
+            brand: brand,
+            price: price,
+            description: description || 'Beautiful product from Soeur',
+            imageUrl: imageLink || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OTk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==',
+            affiliateLink: link || '',
+            category: extractCategoryFromTitle(title),
             availability: 'in stock'
           }
           
-          console.log('Extracted product data:', {
-            name: product.name,
-            price: product.price,
-            imageUrl: product.imageUrl,
-            affiliateLink: product.affiliateLink
-          })
-          
-          if (product.name && product.price && product.name !== 'Product') {
-            products.push(product)
-            console.log('✅ Added product:', product.name, product.price, 'Image:', product.imageUrl)
-          } else {
-            console.log('❌ Skipped product - missing data:', {
-              name: product.name,
-              price: product.price,
-              nameValid: product.name && product.name !== 'Product',
-              priceValid: product.price && product.price !== '0.00'
-            })
-          }
-        } catch (parseError) {
-          console.warn('Error parsing product line:', parseError, line.substring(0, 100))
+          products.push(product)
+          console.log('✅ Added product:', product.name, product.price, 'Image:', product.imageUrl ? 'Yes' : 'No')
+        } else {
+          console.log('❌ Skipped item - missing title or price:', { title, price })
         }
+      } catch (parseError) {
+        console.warn('Error parsing item:', parseError)
       }
     }
     
@@ -129,156 +120,22 @@ function parseXMLFeed(xmlText: string) {
   }
 }
 
-function extractProductId(line: string): string {
-  // Extract product ID from the line (look for long numeric ID)
-  const match = line.match(/(\d{14,})/)
-  return match ? match[1] : `soeur_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+function extractXMLValue(xml: string, tag: string): string {
+  const regex = new RegExp(`<${tag}>(.*?)</${tag}>`, 's')
+  const match = xml.match(regex)
+  return match ? match[1].trim() : ''
 }
 
-function extractProductName(line: string): string {
-  // Extract product name from the line - look for patterns like "BAGUE ARGENT", "BOTTINES TEXAS MARRON", etc.
-  const patterns = [
-    /(BAGUE\s+[A-Z\s]+)/,
-    /(BOTTINES\s+[A-Z\s]+)/,
-    /(CARDIGAN\s+[A-Z\s]+)/,
-    /(PULL\s+[A-Z\s]+)/,
-    /(ROBE\s+[A-Z\s]+)/,
-    /(CHAUSSURES\s+[A-Z\s]+)/,
-    /(ACCESSOIRES\s+[A-Z\s]+)/,
-    /(T-SHIRT\s+[A-Z\s]+)/,
-    /(PANTALON\s+[A-Z\s]+)/,
-    /(VESTE\s+[A-Z\s]+)/,
-    /(MANTEAU\s+[A-Z\s]+)/
-  ]
-  
-  for (const pattern of patterns) {
-    const match = line.match(pattern)
-    if (match) {
-      const name = match[1].trim()
-      console.log('Found product name:', name)
-      return name
-    }
-  }
-  
-  // Fallback: look for any all-caps words that might be product names
-  const words = line.split(' ').filter(word => 
-    word.length > 3 && 
-    word === word.toUpperCase() && 
-    !word.includes('HTTP') && 
-    !word.includes('HTTPS') &&
-    !word.match(/^\d+$/) &&
-    !word.includes('EUR') &&
-    !word.includes('€')
-  )
-  
-  const fallbackName = words.length > 0 ? words.slice(0, 3).join(' ') : 'Product'
-  console.log('Using fallback product name:', fallbackName)
-  return fallbackName
-}
-
-function extractPrice(line: string): string {
-  // Extract price - look for various price patterns
-  const pricePatterns = [
-    /(\d+\.\d{2})\s+new/,           // "145.00 new"
-    /(\d+\.\d{2})\s+EUR/,           // "145.00 EUR"
-    /(\d+\.\d{2})\s+€/,             // "145.00 €"
-    /(\d+\.\d{2})/,                 // "145.00"
-    /(\d+)\s+EUR/,                  // "145 EUR"
-    /(\d+)\s+€/,                    // "145 €"
-    /(\d+)/                         // "145"
-  ]
-  
-  for (const pattern of pricePatterns) {
-    const match = line.match(pattern)
-    if (match) {
-      const price = match[1]
-      console.log('Found price:', price, 'in line:', line.substring(0, 100))
-      return price
-    }
-  }
-  
-  console.log('No price found in line:', line.substring(0, 100))
-  return '0.00'
-}
-
-function extractDescription(line: string): string {
-  // Extract description from the line - look for French descriptions
-  const parts = line.split(' ')
-  
-  // Look for description patterns (French text)
-  const descriptionStart = parts.findIndex(part => 
-    part.includes('explore') || 
-    part.includes('design') || 
-    part.includes('ligne') ||
-    part.includes('coupe') ||
-    part.includes('tricoté')
-  )
-  
-  if (descriptionStart > -1) {
-    // Find the end of description (before affiliate link)
-    const descriptionEnd = parts.findIndex(part => part.includes('https://lb.affilae.com'))
-    if (descriptionEnd > descriptionStart) {
-      return parts.slice(descriptionStart, descriptionEnd).join(' ').trim()
-    }
-  }
-  
-  return 'Beautiful product from Soeur'
-}
-
-function extractImageUrl(line: string): string {
-  // Extract image URL - look for various image formats and domains
-  const imagePatterns = [
-    /https:\/\/cdn\.shopify\.com[^\s]+\.jpg/,
-    /https:\/\/cdn\.shopify\.com[^\s]+\.jpeg/,
-    /https:\/\/cdn\.shopify\.com[^\s]+\.png/,
-    /https:\/\/cdn\.shopify\.com[^\s]+\.webp/,
-    /https:\/\/[^\s]+\.jpg/,
-    /https:\/\/[^\s]+\.jpeg/,
-    /https:\/\/[^\s]+\.png/,
-    /https:\/\/[^\s]+\.webp/
-  ]
-  
-  for (const pattern of imagePatterns) {
-    const match = line.match(pattern)
-    if (match) {
-      console.log('Found image URL:', match[0])
-      return match[0]
-    }
-  }
-  
-  console.log('No image URL found in line:', line.substring(0, 200))
-  
-  // Use a data URI as fallback instead of external service
-  return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OTk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='
-}
-
-function extractAffiliateLink(line: string): string {
-  // Extract affiliate tracking link - look for various affiliate patterns
-  const affiliatePatterns = [
-    /https:\/\/lb\.affilae\.com[^\s]+/,     // "https://lb.affilae.com/..."
-    /https:\/\/[^\s]*affilae[^\s]*/,        // Any URL containing "affilae"
-    /https:\/\/[^\s]*affiliate[^\s]*/,      // Any URL containing "affiliate"
-    /https:\/\/[^\s]*track[^\s]*/,          // Any URL containing "track"
-    /https:\/\/[^\s]*click[^\s]*/           // Any URL containing "click"
-  ]
-  
-  for (const pattern of affiliatePatterns) {
-    const match = line.match(pattern)
-    if (match) {
-      console.log('Found affiliate link:', match[0])
-      return match[0]
-    }
-  }
-  
-  console.log('No affiliate link found in line:', line.substring(0, 100))
-  return ''
-}
-
-function extractCategory(line: string): string {
-  // Extract category information
-  if (line.includes('BAGUE') || line.includes('BAGUES')) return 'Jewelry'
-  if (line.includes('BOTTINES') || line.includes('CHAUSSURES')) return 'Shoes'
-  if (line.includes('CARDIGAN') || line.includes('PULL')) return 'Clothing'
-  if (line.includes('ROBE') || line.includes('DRESS')) return 'Dresses'
-  return 'Accessories'
+function extractCategoryFromTitle(title: string): string {
+  const titleUpper = title.toUpperCase()
+  if (titleUpper.includes('BAGUE') || titleUpper.includes('BAGUES')) return 'Jewelry'
+  if (titleUpper.includes('BOTTINES') || titleUpper.includes('CHAUSSURES') || titleUpper.includes('BALLERINES')) return 'Shoes'
+  if (titleUpper.includes('CARDIGAN') || titleUpper.includes('PULL') || titleUpper.includes('SWEATER')) return 'Clothing'
+  if (titleUpper.includes('ROBE') || titleUpper.includes('DRESS')) return 'Clothing'
+  if (titleUpper.includes('T-SHIRT') || titleUpper.includes('TEE')) return 'Clothing'
+  if (titleUpper.includes('PANTALON') || titleUpper.includes('PANTS')) return 'Clothing'
+  if (titleUpper.includes('VESTE') || titleUpper.includes('JACKET')) return 'Clothing'
+  if (titleUpper.includes('MANTEAU') || titleUpper.includes('COAT')) return 'Clothing'
+  if (titleUpper.includes('ACCESSOIRES') || titleUpper.includes('ACCESSORIES')) return 'Accessories'
+  return 'Clothing'
 }
