@@ -41,30 +41,38 @@ export async function PUT(
 ) {
   try {
     const { id } = await params
-    const { title, description, imageUrl, category, isPublished, products } = await request.json()
+    const updateData = await request.json()
+    const { title, description, imageUrl, category, isPublished, products } = updateData
     
-    console.log('Updating outfit:', { id, title, description, imageUrl, isPublished, products })
+    console.log('Updating outfit:', { id, ...updateData })
+
+    // Build the update data object dynamically, only including provided fields
+    const outfitUpdateData: any = {}
+    
+    if (title !== undefined) outfitUpdateData.title = title
+    if (description !== undefined) outfitUpdateData.description = description
+    if (imageUrl !== undefined) outfitUpdateData.imageUrl = imageUrl
+    if (category !== undefined) outfitUpdateData.category = category
+    if (isPublished !== undefined) outfitUpdateData.isPublished = isPublished
+    
+    // Only update products if they are explicitly provided
+    if (products !== undefined) {
+      outfitUpdateData.products = {
+        deleteMany: {},
+        create: products.map((product: any) => ({
+          name: product.name,
+          brand: product.brand,
+          price: product.price || null,
+          affiliateLink: product.affiliateLink || null,
+          x: product.x,
+          y: product.y
+        }))
+      }
+    }
 
     const outfit = await prisma.outfit.update({
       where: { id },
-      data: {
-        title,
-        description,
-        imageUrl,
-        category: category || 'outfit', // Default to 'outfit' if not provided
-        isPublished,
-        products: {
-          deleteMany: {},
-          create: (products || []).map((product: any) => ({
-            name: product.name,
-            brand: product.brand,
-            price: product.price || null,
-            affiliateLink: product.affiliateLink || null,
-            x: product.x,
-            y: product.y
-          }))
-        }
-      },
+      data: outfitUpdateData,
       include: {
         products: true
       }
