@@ -40,6 +40,7 @@ interface Product {
   name: string
   brand: string
   price?: string
+  imageUrl?: string
   affiliateLink?: string
   x: number
   y: number
@@ -64,6 +65,8 @@ export default function OutfitsPage() {
     name: '',
     brand: '',
     price: '',
+    imageUrl: '',
+    affiliateLink: '',
     x: 0,
     y: 0
   })
@@ -545,6 +548,7 @@ export default function OutfitsPage() {
       name: product.name,
       brand: product.brand,
       price: product.price,
+      imageUrl: product.imageUrl,
       affiliateLink: product.affiliateLink,
       x: currentTag.x,
       y: currentTag.y
@@ -587,7 +591,7 @@ export default function OutfitsPage() {
           event.preventDefault()
           setShowTagModal(false)
           setEditingTagIndex(null)
-          setCurrentTag({ name: '', brand: '', price: '', x: 0, y: 0 })
+          setCurrentTag({ name: '', brand: '', price: '', imageUrl: '', affiliateLink: '', x: 0, y: 0 })
         }
       }
     }
@@ -683,7 +687,7 @@ export default function OutfitsPage() {
         showToast('success', 'Étiquette ajoutée avec succès !')
       }
       setShowTagModal(false)
-      setCurrentTag({ name: '', brand: '', price: '', x: 0, y: 0 })
+      setCurrentTag({ name: '', brand: '', price: '', imageUrl: '', affiliateLink: '', x: 0, y: 0 })
       setEditingTagIndex(null)
     }
   }
@@ -1579,7 +1583,7 @@ export default function OutfitsPage() {
                 onClick={() => {
                   setShowTagModal(false)
                   setEditingTagIndex(null)
-                  setCurrentTag({ name: '', brand: '', price: '', x: 0, y: 0 })
+                  setCurrentTag({ name: '', brand: '', price: '', imageUrl: '', affiliateLink: '', x: 0, y: 0 })
                 }}
                 className="p-2 text-gray-400 hover:text-gray-600 touch-manipulation"
               >
