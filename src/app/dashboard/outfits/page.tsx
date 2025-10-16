@@ -19,8 +19,10 @@ import {
   Calendar,
   Grid3X3,
   List,
-  FileText
+  FileText,
+  ShoppingBag
 } from 'lucide-react'
+import ProductSearch from '../../../components/ProductSearch'
 
 interface Outfit {
   id: string
@@ -57,6 +59,7 @@ export default function OutfitsPage() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [tags, setTags] = useState<Omit<Product, 'id'>[]>([])
   const [showTagModal, setShowTagModal] = useState(false)
+  const [showProductSearch, setShowProductSearch] = useState(false)
   const [currentTag, setCurrentTag] = useState<Omit<Product, 'id'> & { x: number; y: number }>({
     name: '',
     brand: '',
@@ -534,6 +537,20 @@ export default function OutfitsPage() {
   const handleTagDelete = (tagIndex: number) => {
     setTags(prev => prev.filter((_, index) => index !== tagIndex))
     showToast('success', 'Étiquette supprimée avec succès !')
+  }
+
+  const handleProductSelect = (product: any) => {
+    // Auto-populate the tag form with product data from feed
+    setCurrentTag({
+      name: product.name,
+      brand: product.brand,
+      price: product.price,
+      affiliateLink: product.affiliateLink,
+      x: currentTag.x,
+      y: currentTag.y
+    })
+    setShowProductSearch(false)
+    showToast('success', 'Produit sélectionné depuis le catalogue !')
   }
 
   // Smart suggestion functions
@@ -1609,6 +1626,17 @@ export default function OutfitsPage() {
                 )}
               </div>
 
+              {/* Search Products Button */}
+              <div className="flex justify-center">
+                <button
+                  onClick={() => setShowProductSearch(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium"
+                >
+                  <ShoppingBag className="h-4 w-4" />
+                  Rechercher dans le catalogue
+                </button>
+              </div>
+
               {/* Product Name with Suggestions */}
               <div className="relative">
                 <label className="block text-sm font-semibold text-gray-700 mb-3">
@@ -1746,6 +1774,13 @@ export default function OutfitsPage() {
           </div>
         </div>
       )}
+
+      {/* Product Search Modal */}
+      <ProductSearch
+        isOpen={showProductSearch}
+        onClose={() => setShowProductSearch(false)}
+        onSelectProduct={handleProductSelect}
+      />
     </div>
   )
 }
