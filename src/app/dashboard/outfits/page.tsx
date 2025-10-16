@@ -171,7 +171,7 @@ export default function OutfitsPage() {
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(true)
   const [isPublishing, setIsPublishing] = useState(false)
-  const [isBulkLoading, setIsBulkLoading] = useState(false)
+  const [bulkLoadingState, setBulkLoadingState] = useState<'idle' | 'publishing' | 'unpublishing' | 'deleting'>('idle')
   const [draggedTagIndex, setDraggedTagIndex] = useState<number | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [dragStartTime, setDragStartTime] = useState<number>(0)
@@ -310,7 +310,7 @@ export default function OutfitsPage() {
   }
 
   const handleBulkPublish = async () => {
-    setIsBulkLoading(true)
+    setBulkLoadingState('publishing')
     try {
       await Promise.all(
         selectedOutfits.map(id => 
@@ -328,12 +328,12 @@ export default function OutfitsPage() {
       console.error('Error bulk publishing:', error)
       showToast('error', 'Erreur lors de la publication des tenues')
     } finally {
-      setIsBulkLoading(false)
+      setBulkLoadingState('idle')
     }
   }
 
   const handleBulkUnpublish = async () => {
-    setIsBulkLoading(true)
+    setBulkLoadingState('unpublishing')
     try {
       await Promise.all(
         selectedOutfits.map(id => 
@@ -351,13 +351,13 @@ export default function OutfitsPage() {
       console.error('Error bulk unpublishing:', error)
       showToast('error', 'Erreur lors de la dépublication des tenues')
     } finally {
-      setIsBulkLoading(false)
+      setBulkLoadingState('idle')
     }
   }
 
   const handleBulkDelete = async () => {
     if (confirm(`Êtes-vous sûr de vouloir supprimer ${selectedOutfits.length} tenue${selectedOutfits.length > 1 ? 's' : ''} ?`)) {
-      setIsBulkLoading(true)
+      setBulkLoadingState('deleting')
       try {
         await Promise.all(
           selectedOutfits.map(id => 
@@ -371,7 +371,7 @@ export default function OutfitsPage() {
         console.error('Error bulk deleting:', error)
         showToast('error', 'Erreur lors de la suppression des tenues')
       } finally {
-        setIsBulkLoading(false)
+        setBulkLoadingState('idle')
       }
     }
   }
@@ -1001,10 +1001,10 @@ export default function OutfitsPage() {
             <div className="flex gap-2">
               <button
                 onClick={handleBulkPublish}
-                disabled={isBulkLoading}
+                disabled={bulkLoadingState !== 'idle'}
                 className="px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation flex items-center gap-2"
               >
-                {isBulkLoading ? (
+                {bulkLoadingState === 'publishing' ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     Publication...
@@ -1015,10 +1015,10 @@ export default function OutfitsPage() {
               </button>
               <button
                 onClick={handleBulkUnpublish}
-                disabled={isBulkLoading}
+                disabled={bulkLoadingState !== 'idle'}
                 className="px-4 py-2 bg-yellow-500 text-white rounded-lg text-sm font-medium hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation flex items-center gap-2"
               >
-                {isBulkLoading ? (
+                {bulkLoadingState === 'unpublishing' ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     Retrait...
@@ -1029,10 +1029,10 @@ export default function OutfitsPage() {
               </button>
               <button
                 onClick={handleBulkDelete}
-                disabled={isBulkLoading}
+                disabled={bulkLoadingState !== 'idle'}
                 className="px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation flex items-center gap-2"
               >
-                {isBulkLoading ? (
+                {bulkLoadingState === 'deleting' ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     Suppression...
@@ -1043,7 +1043,7 @@ export default function OutfitsPage() {
               </button>
               <button
                 onClick={() => setSelectedOutfits([])}
-                disabled={isBulkLoading}
+                disabled={bulkLoadingState !== 'idle'}
                 className="px-4 py-2 bg-gray-500 text-white rounded-lg text-sm font-medium hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
               >
                 Cancel
