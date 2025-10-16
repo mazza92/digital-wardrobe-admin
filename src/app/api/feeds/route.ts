@@ -103,7 +103,7 @@ function parseXMLFeed(xmlText: string) {
           }
           
           products.push(product)
-          console.log('✅ Added product:', product.name, product.price, 'Image:', product.imageUrl ? 'Yes' : 'No')
+          console.log('✅ Added product:', product.name, product.price, 'Image URL:', product.imageUrl)
         } else {
           console.log('❌ Skipped item - missing title or price:', { title, price })
         }

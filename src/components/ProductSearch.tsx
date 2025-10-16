@@ -62,6 +62,11 @@ export default function ProductSearch({ onSelectProduct, onClose, isOpen }: Prod
       const response = await fetch(`/api/feeds?brand=${selectedBrand}&search=${encodeURIComponent(term)}`)
       if (response.ok) {
         const data = await response.json()
+        console.log('Search results:', data.products?.slice(0, 3).map(p => ({
+          name: p.name,
+          imageUrl: p.imageUrl,
+          price: p.price
+        })))
         setProducts(data.products || [])
       }
     } catch (error) {
@@ -139,14 +144,23 @@ export default function ProductSearch({ onSelectProduct, onClose, isOpen }: Prod
                 >
                   <div className="flex gap-4">
                     <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                      <img
-                        src={product.imageUrl}
-                        alt={product.name}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OTk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='
-                        }}
-                      />
+                      {product.imageUrl && product.imageUrl.startsWith('https://') ? (
+                        <img
+                          src={product.imageUrl}
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                          crossOrigin="anonymous"
+                          onLoad={() => console.log('Image loaded successfully:', product.imageUrl)}
+                          onError={(e) => {
+                            console.log('Image failed to load:', product.imageUrl, 'Error:', e)
+                            (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OTk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                          <span className="text-xs text-gray-500">No Image</span>
+                        </div>
+                      )}
                     </div>
                     
                     <div className="flex-1 min-w-0">
