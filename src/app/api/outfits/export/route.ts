@@ -1,6 +1,21 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 
+function decodeHtmlEntities(text: string): string {
+  const entities: { [key: string]: string } = {
+    '&amp;': '&',
+    '&lt;': '<',
+    '&gt;': '>',
+    '&quot;': '"',
+    '&#39;': "'",
+    '&nbsp;': ' '
+  }
+  
+  return text.replace(/&[a-zA-Z0-9#]+;/g, (entity) => {
+    return entities[entity] || entity
+  })
+}
+
 export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
@@ -48,7 +63,7 @@ export async function GET() {
           brand: product.brand,
           price: product.price || '',
           imageUrl: (product as any).imageUrl || '',
-          link: product.affiliateLink || '',
+          link: product.affiliateLink ? decodeHtmlEntities(product.affiliateLink) : '',
           x: product.x,
           y: product.y
         }))

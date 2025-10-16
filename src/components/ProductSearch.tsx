@@ -62,11 +62,6 @@ export default function ProductSearch({ onSelectProduct, onClose, isOpen }: Prod
       const response = await fetch(`/api/feeds?brand=${selectedBrand}&search=${encodeURIComponent(term)}`)
       if (response.ok) {
         const data = await response.json()
-        console.log('Search results:', data.products?.slice(0, 3).map(p => ({
-          name: p.name,
-          imageUrl: p.imageUrl,
-          price: p.price
-        })))
         setProducts(data.products || [])
       }
     } catch (error) {
@@ -150,9 +145,8 @@ export default function ProductSearch({ onSelectProduct, onClose, isOpen }: Prod
                           alt={product.name}
                           className="w-full h-full object-cover"
                           crossOrigin="anonymous"
-                          onLoad={() => console.log('Image loaded successfully:', product.imageUrl)}
+                          onLoad={() => {}}
                           onError={(e) => {
-                            console.log('Image failed to load:', product.imageUrl, 'Error:', e)
                             (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OTk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='
                           }}
                         />

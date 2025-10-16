@@ -31,15 +31,31 @@ export async function GET(request: NextRequest) {
       const products = parseXMLFeed(xmlText)
       console.log('Products parsed:', products.length)
       
-      // Filter products if search term provided
+      // Filter and sort products if search term provided
       let filteredProducts = products
       if (search) {
         const searchLower = search.toLowerCase()
-        filteredProducts = products.filter(product => 
-          product.name.toLowerCase().includes(searchLower) ||
-          product.description.toLowerCase().includes(searchLower) ||
-          product.brand.toLowerCase().includes(searchLower)
-        )
+        const searchWords = searchLower.split(' ').filter(word => word.length > 0)
+        
+        filteredProducts = products
+          .filter(product => {
+            const productName = product.name.toLowerCase()
+            const productDescription = product.description.toLowerCase()
+            const productBrand = product.brand.toLowerCase()
+            
+            // Check if any search word matches any field
+            return searchWords.some(word => 
+              productName.includes(word) ||
+              productDescription.includes(word) ||
+              productBrand.includes(word)
+            )
+          })
+          .sort((a, b) => {
+            // Calculate relevance score for sorting
+            const scoreA = calculateRelevanceScore(a, searchWords)
+            const scoreB = calculateRelevanceScore(b, searchWords)
+            return scoreB - scoreA // Higher score first
+          })
       }
       
       return NextResponse.json({ 
@@ -138,4 +154,33 @@ function extractCategoryFromTitle(title: string): string {
   if (titleUpper.includes('MANTEAU') || titleUpper.includes('COAT')) return 'Clothing'
   if (titleUpper.includes('ACCESSOIRES') || titleUpper.includes('ACCESSORIES')) return 'Accessories'
   return 'Clothing'
+}
+
+function calculateRelevanceScore(product: any, searchWords: string[]): number {
+  let score = 0
+  const productName = product.name.toLowerCase()
+  const productDescription = product.description.toLowerCase()
+  const productBrand = product.brand.toLowerCase()
+  
+  searchWords.forEach(word => {
+    // Exact match in name gets highest score
+    if (productName === word) score += 100
+    else if (productName.startsWith(word)) score += 80
+    else if (productName.includes(word)) score += 60
+    
+    // Brand match gets medium score
+    if (productBrand.includes(word)) score += 40
+    
+    // Description match gets lower score
+    if (productDescription.includes(word)) score += 20
+    
+    // Partial word matches get lower scores
+    const nameWords = productName.split(' ')
+    nameWords.forEach(nameWord => {
+      if (nameWord.startsWith(word)) score += 30
+      else if (nameWord.includes(word)) score += 10
+    })
+  })
+  
+  return score
 }

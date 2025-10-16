@@ -110,6 +110,7 @@ export default function OutfitsPage() {
       { name: 'Isabel Marant', category: 'Designer', popular: true },
       { name: 'Stella McCartney', category: 'Designer', popular: true },
       { name: 'Jacquemus', category: 'Designer', popular: true },
+      { name: 'Soeur', category: 'Designer', popular: true },
       { name: 'Ganni', category: 'Designer', popular: true },
       { name: 'Reformation', category: 'Designer', popular: true },
       { name: 'Rouje', category: 'Designer', popular: true },
