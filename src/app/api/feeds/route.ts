@@ -94,7 +94,7 @@ function parseXMLFeed(xmlText: string) {
           
           if (product.name && product.price && product.name !== 'Product') {
             products.push(product)
-            console.log('Added product:', product.name, product.price)
+            console.log('Added product:', product.name, product.price, 'Image:', product.imageUrl)
           }
         } catch (parseError) {
           console.warn('Error parsing product line:', parseError, line.substring(0, 100))
@@ -178,23 +178,30 @@ function extractDescription(line: string): string {
 }
 
 function extractImageUrl(line: string): string {
-  // Extract image URL - look for various image formats
+  // Extract image URL - look for various image formats and domains
   const imagePatterns = [
     /https:\/\/cdn\.shopify\.com[^\s]+\.jpg/,
     /https:\/\/cdn\.shopify\.com[^\s]+\.jpeg/,
     /https:\/\/cdn\.shopify\.com[^\s]+\.png/,
-    /https:\/\/cdn\.shopify\.com[^\s]+\.webp/
+    /https:\/\/cdn\.shopify\.com[^\s]+\.webp/,
+    /https:\/\/[^\s]+\.jpg/,
+    /https:\/\/[^\s]+\.jpeg/,
+    /https:\/\/[^\s]+\.png/,
+    /https:\/\/[^\s]+\.webp/
   ]
   
   for (const pattern of imagePatterns) {
     const match = line.match(pattern)
     if (match) {
+      console.log('Found image URL:', match[0])
       return match[0]
     }
   }
   
-  // Return a proper placeholder image URL
-  return 'https://via.placeholder.com/200x200/f0f0f0/999999?text=No+Image'
+  console.log('No image URL found in line:', line.substring(0, 200))
+  
+  // Use a data URI as fallback instead of external service
+  return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OTk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='
 }
 
 function extractAffiliateLink(line: string): string {
