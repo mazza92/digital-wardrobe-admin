@@ -112,7 +112,7 @@ function parseXMLFeed(xmlText: string) {
             brand: brand,
             price: price,
             description: description || 'Beautiful product from Soeur',
-            imageUrl: isValidImageUrl(imageLink) ? imageLink : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OTk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==',
+            imageUrl: imageLink || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OTk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==',
             affiliateLink: link || '',
             category: extractCategoryFromTitle(title),
             availability: 'in stock'
@@ -183,18 +183,4 @@ function calculateRelevanceScore(product: any, searchWords: string[]): number {
   })
   
   return score
-}
-
-function isValidImageUrl(url: string): boolean {
-  if (!url || !url.startsWith('https://')) return false
-  
-  // Check for known broken image patterns
-  const brokenPatterns = [
-    'cdn.shopify.com/s/files/1/0352/8464/8076/files/',
-    'placeholder.jpg',
-    'no-image',
-    'missing'
-  ]
-  
-  return !brokenPatterns.some(pattern => url.includes(pattern))
 }
