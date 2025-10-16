@@ -178,9 +178,23 @@ function extractDescription(line: string): string {
 }
 
 function extractImageUrl(line: string): string {
-  // Extract image URL
-  const imageMatch = line.match(/https:\/\/cdn\.shopify\.com[^\s]+\.jpg/)
-  return imageMatch ? imageMatch[0] : '/placeholder.jpg'
+  // Extract image URL - look for various image formats
+  const imagePatterns = [
+    /https:\/\/cdn\.shopify\.com[^\s]+\.jpg/,
+    /https:\/\/cdn\.shopify\.com[^\s]+\.jpeg/,
+    /https:\/\/cdn\.shopify\.com[^\s]+\.png/,
+    /https:\/\/cdn\.shopify\.com[^\s]+\.webp/
+  ]
+  
+  for (const pattern of imagePatterns) {
+    const match = line.match(pattern)
+    if (match) {
+      return match[0]
+    }
+  }
+  
+  // Return a proper placeholder image URL
+  return 'https://via.placeholder.com/200x200/f0f0f0/999999?text=No+Image'
 }
 
 function extractAffiliateLink(line: string): string {

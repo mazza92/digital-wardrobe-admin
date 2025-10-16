@@ -144,7 +144,7 @@ export default function ProductSearch({ onSelectProduct, onClose, isOpen }: Prod
                         alt={product.name}
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src = '/placeholder.jpg'
+                          (e.target as HTMLImageElement).src = 'https://via.placeholder.com/200x200/f0f0f0/999999?text=No+Image'
                         }}
                       />
                     </div>
