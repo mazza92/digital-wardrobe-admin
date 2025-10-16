@@ -77,9 +77,14 @@ function parseXMLFeed(xmlText: string) {
     for (const line of lines) {
       // Look for lines that contain product data (brand name, product names, etc.)
       if (line.includes('Soeur') || line.includes('BAGUE') || line.includes('BOTTINES') || 
-          line.includes('CARDIGAN') || line.includes('PULL') || line.includes('ROBE')) {
+          line.includes('CARDIGAN') || line.includes('PULL') || line.includes('ROBE') ||
+          line.includes('T-SHIRT') || line.includes('PANTALON') || line.includes('VESTE') ||
+          line.includes('MANTEAU') || line.includes('CHAUSSURES') || line.includes('ACCESSOIRES') ||
+          (line.includes('https://') && line.includes('EUR'))) {
         
         try {
+          console.log('Processing line:', line.substring(0, 200))
+          
           const product = {
             id: extractProductId(line),
             name: extractProductName(line),
@@ -92,9 +97,23 @@ function parseXMLFeed(xmlText: string) {
             availability: 'in stock'
           }
           
+          console.log('Extracted product data:', {
+            name: product.name,
+            price: product.price,
+            imageUrl: product.imageUrl,
+            affiliateLink: product.affiliateLink
+          })
+          
           if (product.name && product.price && product.name !== 'Product') {
             products.push(product)
-            console.log('Added product:', product.name, product.price, 'Image:', product.imageUrl)
+            console.log('✅ Added product:', product.name, product.price, 'Image:', product.imageUrl)
+          } else {
+            console.log('❌ Skipped product - missing data:', {
+              name: product.name,
+              price: product.price,
+              nameValid: product.name && product.name !== 'Product',
+              priceValid: product.price && product.price !== '0.00'
+            })
           }
         } catch (parseError) {
           console.warn('Error parsing product line:', parseError, line.substring(0, 100))
@@ -125,13 +144,19 @@ function extractProductName(line: string): string {
     /(PULL\s+[A-Z\s]+)/,
     /(ROBE\s+[A-Z\s]+)/,
     /(CHAUSSURES\s+[A-Z\s]+)/,
-    /(ACCESSOIRES\s+[A-Z\s]+)/
+    /(ACCESSOIRES\s+[A-Z\s]+)/,
+    /(T-SHIRT\s+[A-Z\s]+)/,
+    /(PANTALON\s+[A-Z\s]+)/,
+    /(VESTE\s+[A-Z\s]+)/,
+    /(MANTEAU\s+[A-Z\s]+)/
   ]
   
   for (const pattern of patterns) {
     const match = line.match(pattern)
     if (match) {
-      return match[1].trim()
+      const name = match[1].trim()
+      console.log('Found product name:', name)
+      return name
     }
   }
   
@@ -141,16 +166,39 @@ function extractProductName(line: string): string {
     word === word.toUpperCase() && 
     !word.includes('HTTP') && 
     !word.includes('HTTPS') &&
-    !word.match(/^\d+$/)
+    !word.match(/^\d+$/) &&
+    !word.includes('EUR') &&
+    !word.includes('€')
   )
   
-  return words.length > 0 ? words.slice(0, 3).join(' ') : 'Product'
+  const fallbackName = words.length > 0 ? words.slice(0, 3).join(' ') : 'Product'
+  console.log('Using fallback product name:', fallbackName)
+  return fallbackName
 }
 
 function extractPrice(line: string): string {
-  // Extract price (look for pattern like "145.00" or "365.00")
-  const priceMatch = line.match(/(\d+\.\d{2})\s+new/)
-  return priceMatch ? priceMatch[1] : '0.00'
+  // Extract price - look for various price patterns
+  const pricePatterns = [
+    /(\d+\.\d{2})\s+new/,           // "145.00 new"
+    /(\d+\.\d{2})\s+EUR/,           // "145.00 EUR"
+    /(\d+\.\d{2})\s+€/,             // "145.00 €"
+    /(\d+\.\d{2})/,                 // "145.00"
+    /(\d+)\s+EUR/,                  // "145 EUR"
+    /(\d+)\s+€/,                    // "145 €"
+    /(\d+)/                         // "145"
+  ]
+  
+  for (const pattern of pricePatterns) {
+    const match = line.match(pattern)
+    if (match) {
+      const price = match[1]
+      console.log('Found price:', price, 'in line:', line.substring(0, 100))
+      return price
+    }
+  }
+  
+  console.log('No price found in line:', line.substring(0, 100))
+  return '0.00'
 }
 
 function extractDescription(line: string): string {
@@ -205,9 +253,25 @@ function extractImageUrl(line: string): string {
 }
 
 function extractAffiliateLink(line: string): string {
-  // Extract affiliate tracking link
-  const affiliateMatch = line.match(/https:\/\/lb\.affilae\.com[^\s]+/)
-  return affiliateMatch ? affiliateMatch[0] : ''
+  // Extract affiliate tracking link - look for various affiliate patterns
+  const affiliatePatterns = [
+    /https:\/\/lb\.affilae\.com[^\s]+/,     // "https://lb.affilae.com/..."
+    /https:\/\/[^\s]*affilae[^\s]*/,        // Any URL containing "affilae"
+    /https:\/\/[^\s]*affiliate[^\s]*/,      // Any URL containing "affiliate"
+    /https:\/\/[^\s]*track[^\s]*/,          // Any URL containing "track"
+    /https:\/\/[^\s]*click[^\s]*/           // Any URL containing "click"
+  ]
+  
+  for (const pattern of affiliatePatterns) {
+    const match = line.match(pattern)
+    if (match) {
+      console.log('Found affiliate link:', match[0])
+      return match[0]
+    }
+  }
+  
+  console.log('No affiliate link found in line:', line.substring(0, 100))
+  return ''
 }
 
 function extractCategory(line: string): string {
