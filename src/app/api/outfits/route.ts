@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
             name: product.name,
             brand: product.brand,
             price: product.price || null,
+            imageUrl: product.imageUrl || null,
             affiliateLink: product.affiliateLink || null,
             x: product.x,
             y: product.y

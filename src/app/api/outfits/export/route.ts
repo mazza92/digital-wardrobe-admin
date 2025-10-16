@@ -45,6 +45,7 @@ export async function GET() {
           name: product.name,
           brand: product.brand,
           price: product.price || '',
+          imageUrl: product.imageUrl || '',
           link: product.affiliateLink || '',
           x: product.x,
           y: product.y

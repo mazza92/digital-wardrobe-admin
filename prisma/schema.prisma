@@ -43,6 +43,7 @@ model Product {
   name        String
   brand       String
   price       String?
+  imageUrl    String?
   affiliateLink String?
   x           Float
   y           Float
