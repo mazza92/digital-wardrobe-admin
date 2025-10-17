@@ -57,6 +57,7 @@ export async function GET() {
         image: outfit.imageUrl,
         description: outfit.description || '',
         category: outfit.category || 'outfit',
+        createdAt: outfit.createdAt,
         products: outfit.products.map(product => ({
           id: product.id,
           name: product.name,
