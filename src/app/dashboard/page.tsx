@@ -282,12 +282,6 @@ export default function DashboardPage() {
           color="pink"
         />
         <StatCard
-          title="Favoris Nets"
-          value={stats.netFavorites.toLocaleString('fr-FR')}
-          icon={Heart}
-          color="red"
-        />
-        <StatCard
           title="Produits Favorisés"
           value={stats.uniqueProductsFavorited}
           icon={Eye}
@@ -322,12 +316,6 @@ export default function DashboardPage() {
               <span className="text-sm text-gray-500">Favoris ce Mois</span>
               <span className="text-lg font-semibold text-gray-900">
                 {stats.monthlyFavorites.toLocaleString('fr-FR')}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-500">Favoris Nets ce Mois</span>
-              <span className="text-lg font-semibold text-gray-900">
-                {stats.monthlyNetFavorites.toLocaleString('fr-FR')}
               </span>
             </div>
             <div className="flex justify-between items-center">
