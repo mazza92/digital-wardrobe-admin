@@ -9,7 +9,14 @@ export async function POST(request: Request) {
     if (!productId || !outfitId) {
       return NextResponse.json(
         { error: 'Product ID and Outfit ID are required' },
-        { status: 400 }
+        { 
+          status: 400,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type',
+          }
+        }
       )
     }
 
@@ -24,7 +31,14 @@ export async function POST(request: Request) {
     if (!product) {
       return NextResponse.json(
         { error: 'Product not found' },
-        { status: 404 }
+        { 
+          status: 404,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type',
+          }
+        }
       )
     }
 
@@ -49,13 +63,26 @@ export async function POST(request: Request) {
       success: true,
       clickId: clickRecord.id,
       message: 'Click tracked successfully'
+    }, {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+      }
     })
 
   } catch (error) {
     console.error('Error tracking click:', error)
     return NextResponse.json(
       { error: 'Failed to track click' },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type',
+        }
+      }
     )
   }
 }
