@@ -18,6 +18,12 @@ interface ReportData {
   brandPerformance: BrandPerformance[]
   revenueData: RevenueData[]
   clickData: ClickData[]
+  summary: {
+    totalClicks: number
+    totalRevenue: number
+    totalProducts: number
+    averageConversionRate: number
+  }
 }
 
 interface ProductPerformance {
@@ -52,7 +58,13 @@ export default function ReportsPage() {
     topProducts: [],
     brandPerformance: [],
     revenueData: [],
-    clickData: []
+    clickData: [],
+    summary: {
+      totalClicks: 0,
+      totalRevenue: 0,
+      totalProducts: 0,
+      averageConversionRate: 0
+    }
   })
   const [isLoading, setIsLoading] = useState(true)
   const [dateRange, setDateRange] = useState('30')
@@ -61,6 +73,7 @@ export default function ReportsPage() {
   const [customStartDate, setCustomStartDate] = useState('')
   const [customEndDate, setCustomEndDate] = useState('')
   const [isCustomRange, setIsCustomRange] = useState(false)
+  const [availableBrands, setAvailableBrands] = useState<string[]>([])
 
   useEffect(() => {
     fetchReportData()
@@ -107,84 +120,44 @@ export default function ReportsPage() {
   const fetchReportData = async () => {
     try {
       setIsLoading(true)
-      // Simulate API call - in real app, this would fetch from your API
-      await new Promise(resolve => setTimeout(resolve, 1000))
       
-      setReportData({
-        topProducts: [
-          {
-            id: '1',
-            name: 'Structured Mini Dress',
-            brand: 'NA-KD',
-            clicks: 234,
-            revenue: 1250.75,
-            conversionRate: 3.2,
-            trend: 'up'
-          },
-          {
-            id: '2',
-            name: 'Oversized Trench Coat',
-            brand: 'NA-KD',
-            clicks: 189,
-            revenue: 980.25,
-            conversionRate: 2.8,
-            trend: 'up'
-          },
-          {
-            id: '3',
-            name: 'Leather Belt',
-            brand: 'NA-KD',
-            clicks: 156,
-            revenue: 875.50,
-            conversionRate: 4.1,
-            trend: 'down'
-          },
-          {
-            id: '4',
-            name: 'Heeled Sandals',
-            brand: 'Zara',
-            clicks: 142,
-            revenue: 720.30,
-            conversionRate: 2.5,
-            trend: 'stable'
-          },
-          {
-            id: '5',
-            name: 'Gold Earrings',
-            brand: 'Zara',
-            clicks: 128,
-            revenue: 450.80,
-            conversionRate: 3.8,
-            trend: 'up'
-          }
-        ],
-        brandPerformance: [
-          { brand: 'NA-KD', clicks: 579, revenue: 3106.50, percentage: 65.2 },
-          { brand: 'Zara', clicks: 270, revenue: 1171.10, percentage: 24.6 },
-          { brand: 'H&M', clicks: 89, revenue: 445.25, percentage: 9.4 },
-          { brand: 'Other', clicks: 23, revenue: 98.75, percentage: 2.1 }
-        ],
-        revenueData: [
-          { date: '2024-01-01', revenue: 1200 },
-          { date: '2024-01-02', revenue: 1350 },
-          { date: '2024-01-03', revenue: 1100 },
-          { date: '2024-01-04', revenue: 1600 },
-          { date: '2024-01-05', revenue: 1400 },
-          { date: '2024-01-06', revenue: 1800 },
-          { date: '2024-01-07', revenue: 1700 }
-        ],
-        clickData: [
-          { date: '2024-01-01', clicks: 450 },
-          { date: '2024-01-02', clicks: 520 },
-          { date: '2024-01-03', clicks: 380 },
-          { date: '2024-01-04', clicks: 680 },
-          { date: '2024-01-05', clicks: 590 },
-          { date: '2024-01-06', clicks: 720 },
-          { date: '2024-01-07', clicks: 650 }
-        ]
+      // Build query parameters
+      const params = new URLSearchParams({
+        dateRange,
+        brand: selectedBrand
       })
+      
+      if (isCustomRange && customStartDate && customEndDate) {
+        params.set('customStart', customStartDate)
+        params.set('customEnd', customEndDate)
+      }
+      
+      const response = await fetch(`/api/reports?${params}`)
+      if (!response.ok) {
+        throw new Error('Failed to fetch report data')
+      }
+      
+      const data = await response.json()
+      setReportData(data)
+      
+      // Extract available brands for filter
+      const brands = [...new Set(data.brandPerformance.map((b: any) => b.brand))]
+      setAvailableBrands(brands)
     } catch (error) {
       console.error('Error fetching report data:', error)
+      // Set fallback empty data
+      setReportData({
+        topProducts: [],
+        brandPerformance: [],
+        revenueData: [],
+        clickData: [],
+        summary: {
+          totalClicks: 0,
+          totalRevenue: 0,
+          totalProducts: 0,
+          averageConversionRate: 0
+        }
+      })
     } finally {
       setIsLoading(false)
     }
@@ -253,6 +226,65 @@ export default function ReportsPage() {
         </div>
       </div>
 
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white p-4 rounded-lg shadow">
+          <div className="flex items-center">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <MousePointer className="h-6 w-6 text-blue-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">Total Clics</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {reportData.summary.totalClicks.toLocaleString('fr-FR')}
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white p-4 rounded-lg shadow">
+          <div className="flex items-center">
+            <div className="p-2 bg-green-100 rounded-lg">
+              <DollarSign className="h-6 w-6 text-green-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">Revenus Totaux</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {reportData.summary.totalRevenue.toLocaleString('fr-FR')} €
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white p-4 rounded-lg shadow">
+          <div className="flex items-center">
+            <div className="p-2 bg-purple-100 rounded-lg">
+              <Eye className="h-6 w-6 text-purple-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">Produits Actifs</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {reportData.summary.totalProducts}
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white p-4 rounded-lg shadow">
+          <div className="flex items-center">
+            <div className="p-2 bg-orange-100 rounded-lg">
+              <TrendingUp className="h-6 w-6 text-orange-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">Taux de Conversion Moyen</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {reportData.summary.averageConversionRate.toFixed(1)}%
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Filters */}
       <div className="bg-white p-4 rounded-lg shadow mb-6">
         <div className="flex flex-wrap gap-4">
@@ -289,9 +321,9 @@ export default function ReportsPage() {
               className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-black"
             >
               <option value="all">Toutes les Marques</option>
-              <option value="NA-KD">NA-KD</option>
-              <option value="Zara">Zara</option>
-              <option value="H&M">H&M</option>
+              {availableBrands.map(brand => (
+                <option key={brand} value={brand}>{brand}</option>
+              ))}
             </select>
           </div>
         </div>
