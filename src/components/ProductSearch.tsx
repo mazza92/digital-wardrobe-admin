@@ -157,23 +157,32 @@ export default function ProductSearch({ onSelectProduct, onClose, isOpen }: Prod
                   <div className="flex gap-4">
                     <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                       {product.imageUrl && product.imageUrl.startsWith('https://') ? (
-                        <img
-                          src={product.imageUrl}
-                          alt={product.name}
-                          className="w-full h-full object-cover"
-                          crossOrigin="anonymous"
-                          loading="lazy"
-                          onLoad={() => {}}
-                          onError={(e) => {
-                            try {
-                              const target = e.target as HTMLImageElement
-                              target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OTk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='
-                              target.onerror = null // Prevent further error handling
-                            } catch (error) {
-                              // Silently handle any errors in error handling
-                            }
-                          }}
-                        />
+                        <div className="relative w-full h-full">
+                          <img
+                            src={product.imageUrl}
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                            crossOrigin="anonymous"
+                            loading="lazy"
+                            onLoad={() => {}}
+                            onError={(e) => {
+                              try {
+                                const target = e.target as HTMLImageElement
+                                target.style.display = 'none'
+                                // Show a simple text placeholder instead of base64 image
+                                const placeholder = target.parentElement?.querySelector('.image-placeholder')
+                                if (placeholder) {
+                                  (placeholder as HTMLElement).style.display = 'flex'
+                                }
+                              } catch (error) {
+                                // Silently handle any errors in error handling
+                              }
+                            }}
+                          />
+                          <div className="image-placeholder absolute inset-0 w-full h-full flex items-center justify-center bg-gray-100" style={{display: 'none'}}>
+                            <span className="text-xs text-gray-500">No Image</span>
+                          </div>
+                        </div>
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gray-100">
                           <span className="text-xs text-gray-500">No Image</span>
