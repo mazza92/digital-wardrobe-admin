@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { AffilaeAPI } from '@/lib/affilae'
 
-export async function POST(request: Request) {
+export async function GET(request: Request) {
   try {
-    const { productId, outfitId, productName, brand, affiliateLink } = await request.json()
+    const { searchParams } = new URL(request.url)
+    const productId = searchParams.get('productId')
+    const outfitId = searchParams.get('outfitId')
+    const productName = searchParams.get('productName')
+    const brand = searchParams.get('brand')
 
     if (!productId || !outfitId) {
       return NextResponse.json(
@@ -41,10 +44,6 @@ export async function POST(request: Request) {
     // Log the click for debugging
     console.log(`Click tracked for product: ${product.name} (${product.brand})`)
 
-    // If we have Affilae integration, we could also track there
-    // For now, we'll just track in our database
-    // TODO: Implement Affilae click tracking if needed
-
     return NextResponse.json({
       success: true,
       clickId: clickRecord.id,
@@ -60,3 +59,13 @@ export async function POST(request: Request) {
   }
 }
 
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  })
+}
