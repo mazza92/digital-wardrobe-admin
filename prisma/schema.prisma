@@ -51,6 +51,7 @@ model Product {
   
   outfit      Outfit   @relation(fields: [outfitId], references: [id], onDelete: Cascade)
   analytics   ProductAnalytics[]
+  favoritesAnalytics FavoritesAnalytics[]
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -80,6 +81,18 @@ model ProductAnalytics {
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   
   @@map("product_analytics")
+}
+
+model FavoritesAnalytics {
+  id          String   @id @default(cuid())
+  productId   String
+  favorites   Int      @default(0)
+  unfavorites Int      @default(0)
+  date        DateTime @default(now())
+  
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@map("favorites_analytics")
 }
 
 model Brand {

@@ -10,7 +10,8 @@ import {
   Calendar,
   ArrowUpRight,
   Plus,
-  BarChart3
+  BarChart3,
+  Heart
 } from 'lucide-react'
 
 interface DashboardStats {
@@ -20,9 +21,14 @@ interface DashboardStats {
   conversionRate: number
   totalOutfits: number
   totalProducts: number
+  totalFavorites: number
+  netFavorites: number
+  uniqueProductsFavorited: number
   monthlyRevenue: number
   monthlyClicks: number
   monthlyConversions: number
+  monthlyFavorites: number
+  monthlyNetFavorites: number
   weeklyRevenue: number
   weeklyClicks: number
   weeklyConversions: number
@@ -54,9 +60,14 @@ export default function DashboardPage() {
     conversionRate: 0,
     totalOutfits: 0,
     totalProducts: 0,
+    totalFavorites: 0,
+    netFavorites: 0,
+    uniqueProductsFavorited: 0,
     monthlyRevenue: 0,
     monthlyClicks: 0,
     monthlyConversions: 0,
+    monthlyFavorites: 0,
+    monthlyNetFavorites: 0,
     weeklyRevenue: 0,
     weeklyClicks: 0,
     weeklyConversions: 0
@@ -105,9 +116,14 @@ export default function DashboardPage() {
         conversionRate: 0,
         totalOutfits: 0,
         totalProducts: 0,
+        totalFavorites: 0,
+        netFavorites: 0,
+        uniqueProductsFavorited: 0,
         monthlyRevenue: 0,
         monthlyClicks: 0,
         monthlyConversions: 0,
+        monthlyFavorites: 0,
+        monthlyNetFavorites: 0,
         weeklyRevenue: 0,
         weeklyClicks: 0,
         weeklyConversions: 0
@@ -259,6 +275,24 @@ export default function DashboardPage() {
           icon={Eye}
           color="blue"
         />
+        <StatCard
+          title="Favoris Totaux"
+          value={stats.totalFavorites.toLocaleString('fr-FR')}
+          icon={Heart}
+          color="pink"
+        />
+        <StatCard
+          title="Favoris Nets"
+          value={stats.netFavorites.toLocaleString('fr-FR')}
+          icon={Heart}
+          color="red"
+        />
+        <StatCard
+          title="Produits Favorisés"
+          value={stats.uniqueProductsFavorited}
+          icon={Eye}
+          color="purple"
+        />
       </div>
 
       {/* Monthly Performance */}
@@ -282,6 +316,18 @@ export default function DashboardPage() {
               <span className="text-sm text-gray-500">Ventes ce Mois</span>
               <span className="text-lg font-semibold text-gray-900">
                 {stats.monthlyConversions.toLocaleString('fr-FR')}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-500">Favoris ce Mois</span>
+              <span className="text-lg font-semibold text-gray-900">
+                {stats.monthlyFavorites.toLocaleString('fr-FR')}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-500">Favoris Nets ce Mois</span>
+              <span className="text-lg font-semibold text-gray-900">
+                {stats.monthlyNetFavorites.toLocaleString('fr-FR')}
               </span>
             </div>
             <div className="flex justify-between items-center">

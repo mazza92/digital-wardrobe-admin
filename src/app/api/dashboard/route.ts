@@ -33,12 +33,29 @@ export async function GET() {
       }
     })
 
+    // Get favorites analytics data
+    const favoritesAnalytics = await prisma.favoritesAnalytics.findMany({
+      include: {
+        product: {
+          include: {
+            outfit: true
+          }
+        }
+      }
+    })
+
     // Calculate total clicks and revenue from our database
     const totalClicks = analytics.reduce((sum, analytic) => sum + analytic.clicks, 0)
     const totalRevenue = analytics.reduce((sum, analytic) => sum + (analytic.revenue || 0), 0)
     
     // Calculate conversion rate
     const conversionRate = totalClicks > 0 ? (totalRevenue / totalClicks * 100) : 0
+
+    // Calculate favorites metrics
+    const totalFavorites = favoritesAnalytics.reduce((sum, analytic) => sum + analytic.favorites, 0)
+    const totalUnfavorites = favoritesAnalytics.reduce((sum, analytic) => sum + analytic.unfavorites, 0)
+    const netFavorites = totalFavorites - totalUnfavorites
+    const uniqueProductsFavorited = new Set(favoritesAnalytics.map(analytic => analytic.productId)).size
 
     // Get monthly data (last 30 days)
     const thirtyDaysAgo = new Date()
@@ -54,6 +71,19 @@ export async function GET() {
 
     const monthlyRevenue = monthlyAnalytics.reduce((sum, analytic) => sum + (analytic.revenue || 0), 0)
     const monthlyClicks = monthlyAnalytics.reduce((sum, analytic) => sum + analytic.clicks, 0)
+
+    // Get monthly favorites data
+    const monthlyFavoritesAnalytics = await prisma.favoritesAnalytics.findMany({
+      where: {
+        date: {
+          gte: thirtyDaysAgo
+        }
+      }
+    })
+
+    const monthlyFavorites = monthlyFavoritesAnalytics.reduce((sum, analytic) => sum + analytic.favorites, 0)
+    const monthlyUnfavorites = monthlyFavoritesAnalytics.reduce((sum, analytic) => sum + analytic.unfavorites, 0)
+    const monthlyNetFavorites = monthlyFavorites - monthlyUnfavorites
 
     // Get weekly data (last 7 days)
     const sevenDaysAgo = new Date()
@@ -113,9 +143,14 @@ export async function GET() {
         conversionRate: Math.round(conversionRate * 100) / 100,
         totalOutfits,
         totalProducts,
+        totalFavorites,
+        netFavorites,
+        uniqueProductsFavorited,
         monthlyRevenue: Math.round(monthlyRevenue * 100) / 100,
         monthlyClicks,
         monthlyConversions,
+        monthlyFavorites,
+        monthlyNetFavorites,
         weeklyRevenue: Math.round(weeklyRevenue * 100) / 100,
         weeklyClicks,
         weeklyConversions
