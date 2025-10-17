@@ -22,46 +22,72 @@ export async function GET() {
       take: 3
     })
 
-    // Get real analytics data from Affilae API
-    const [
-      overallPerformance,
-      monthlyPerformance,
-      weeklyPerformance
-    ] = await Promise.all([
-      AffilaeAnalytics.getOverallPerformance(),
-      AffilaeAnalytics.getMonthlyPerformance(),
-      AffilaeAnalytics.getWeeklyPerformance()
-    ])
+    // Get analytics data from our database (tracked clicks)
+    const analytics = await prisma.productAnalytics.findMany({
+      include: {
+        product: {
+          include: {
+            outfit: true
+          }
+        }
+      }
+    })
 
-    const {
-      totalClicks,
-      totalConversions,
-      totalRevenue,
-      conversionRate
-    } = overallPerformance
+    // Calculate total clicks and revenue from our database
+    const totalClicks = analytics.reduce((sum, analytic) => sum + analytic.clicks, 0)
+    const totalRevenue = analytics.reduce((sum, analytic) => sum + (analytic.revenue || 0), 0)
+    
+    // Calculate conversion rate
+    const conversionRate = totalClicks > 0 ? (totalRevenue / totalClicks * 100) : 0
 
-    const {
-      clicks: monthlyClicks,
-      conversions: monthlyConversions,
-      revenue: monthlyRevenue
-    } = monthlyPerformance
+    // Get monthly data (last 30 days)
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+    
+    const monthlyAnalytics = await prisma.productAnalytics.findMany({
+      where: {
+        date: {
+          gte: thirtyDaysAgo
+        }
+      }
+    })
 
-    const {
-      clicks: weeklyClicks,
-      conversions: weeklyConversions,
-      revenue: weeklyRevenue
-    } = weeklyPerformance
+    const monthlyRevenue = monthlyAnalytics.reduce((sum, analytic) => sum + (analytic.revenue || 0), 0)
+    const monthlyClicks = monthlyAnalytics.reduce((sum, analytic) => sum + analytic.clicks, 0)
 
-    // Format recent outfits for display
-    // Note: Individual outfit analytics would require more complex Affilae API calls
-    // For now, we'll show the outfits with placeholder analytics
+    // Get weekly data (last 7 days)
+    const sevenDaysAgo = new Date()
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+    
+    const weeklyAnalytics = await prisma.productAnalytics.findMany({
+      where: {
+        date: {
+          gte: sevenDaysAgo
+        }
+      }
+    })
+
+    const weeklyClicks = weeklyAnalytics.reduce((sum, analytic) => sum + analytic.clicks, 0)
+
+    // For now, we'll use our tracked data for clicks and placeholder for conversions
+    // TODO: Integrate with Affilae for real conversion data
+    const totalConversions = 0 // Placeholder - would come from Affilae
+    const monthlyConversions = 0 // Placeholder
+    const weeklyConversions = 0 // Placeholder
+    const weeklyRevenue = 0 // Placeholder
+
+    // Format recent outfits for display with real click data
     const formattedRecentOutfits = recentOutfits.map(outfit => {
+      const outfitAnalytics = analytics.filter(a => a.product.outfitId === outfit.id)
+      const outfitClicks = outfitAnalytics.reduce((sum, analytic) => sum + analytic.clicks, 0)
+      const outfitRevenue = outfitAnalytics.reduce((sum, analytic) => sum + (analytic.revenue || 0), 0)
+
       return {
         id: outfit.id,
         title: outfit.title,
         imageUrl: outfit.imageUrl,
-        clicks: 0, // TODO: Implement individual outfit analytics from Affilae
-        revenue: 0, // TODO: Implement individual outfit analytics from Affilae
+        clicks: outfitClicks,
+        revenue: outfitRevenue,
         createdAt: outfit.createdAt,
         productsCount: outfit.products.length
       }
