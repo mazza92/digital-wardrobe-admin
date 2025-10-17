@@ -18,8 +18,10 @@ interface DashboardStats {
   totalClicks: number
   conversionRate: number
   totalOutfits: number
+  totalProducts: number
   monthlyRevenue: number
   weeklyClicks: number
+  monthlyClicks: number
 }
 
 interface TopOutfit {
@@ -28,6 +30,15 @@ interface TopOutfit {
   imageUrl: string
   clicks: number
   revenue: number
+  createdAt: string
+  productsCount: number
+}
+
+interface RecentActivity {
+  id: string
+  title: string
+  createdAt: string
+  type: string
 }
 
 export default function DashboardPage() {
@@ -37,55 +48,58 @@ export default function DashboardPage() {
     totalClicks: 0,
     conversionRate: 0,
     totalOutfits: 0,
+    totalProducts: 0,
     monthlyRevenue: 0,
-    weeklyClicks: 0
+    weeklyClicks: 0,
+    monthlyClicks: 0
   })
   const [topOutfits, setTopOutfits] = useState<TopOutfit[]>([])
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     fetchDashboardData()
   }, [])
 
+  const getTimeAgo = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+    
+    if (diffInSeconds < 60) return 'À l\'instant'
+    if (diffInSeconds < 3600) return `Il y a ${Math.floor(diffInSeconds / 60)} min`
+    if (diffInSeconds < 86400) return `Il y a ${Math.floor(diffInSeconds / 3600)}h`
+    if (diffInSeconds < 604800) return `Il y a ${Math.floor(diffInSeconds / 86400)} jour${Math.floor(diffInSeconds / 86400) > 1 ? 's' : ''}`
+    if (diffInSeconds < 2592000) return `Il y a ${Math.floor(diffInSeconds / 604800)} semaine${Math.floor(diffInSeconds / 604800) > 1 ? 's' : ''}`
+    
+    return `Le ${date.toLocaleDateString('fr-FR')}`
+  }
+
   const fetchDashboardData = async () => {
     try {
-      // Simulate API call - in real app, this would fetch from your API
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      const response = await fetch('/api/dashboard')
+      if (!response.ok) {
+        throw new Error('Failed to fetch dashboard data')
+      }
       
-      setStats({
-        totalRevenue: 12450.75,
-        totalClicks: 2847,
-        conversionRate: 3.2,
-        totalOutfits: 24,
-        monthlyRevenue: 3250.50,
-        weeklyClicks: 456
-      })
-
-      setTopOutfits([
-        {
-          id: '1',
-          title: 'Belted Mini Dress',
-          imageUrl: 'https://www.na-kd.com/cdn-cgi/image/quality=80,sharpen=0.3,width=984/globalassets/belted_structured_mini_dress_1858-000012-0765_3_campaign.jpg',
-          clicks: 234,
-          revenue: 1250.75
-        },
-        {
-          id: '2',
-          title: 'Oversized Trench Coat',
-          imageUrl: 'https://www.na-kd.com/cdn-cgi/image/quality=80,sharpen=0.3,width=984/globalassets/oversized_belted_trenchcoat_1858-000002-0765_3_campaign.jpg',
-          clicks: 189,
-          revenue: 980.25
-        },
-        {
-          id: '3',
-          title: 'High Slit Maxi Dress',
-          imageUrl: 'https://www.na-kd.com/cdn-cgi/image/quality=80,sharpen=0.3,width=984/globalassets/checked_high_slit_maxi_dress_1858-000008-7733_3_campaign.jpg',
-          clicks: 156,
-          revenue: 875.50
-        }
-      ])
+      const data = await response.json()
+      
+      setStats(data.stats)
+      setTopOutfits(data.recentOutfits)
+      setRecentActivity(data.recentActivity)
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
+      // Set fallback data in case of error
+      setStats({
+        totalRevenue: 0,
+        totalClicks: 0,
+        conversionRate: 0,
+        totalOutfits: 0,
+        totalProducts: 0,
+        monthlyRevenue: 0,
+        weeklyClicks: 0,
+        monthlyClicks: 0
+      })
     } finally {
       setIsLoading(false)
     }
@@ -205,27 +219,24 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 gap-3 md:gap-5 lg:grid-cols-4 mb-6 md:mb-8">
         <StatCard
           title="Revenus Totaux"
-          value={`${stats.totalRevenue.toLocaleString()} €`}
-          change="+12.5%"
+          value={`${stats.totalRevenue.toLocaleString('fr-FR')} €`}
           icon={DollarSign}
           color="green"
         />
         <StatCard
           title="Clics Totaux"
-          value={stats.totalClicks.toLocaleString()}
-          change="+8.2%"
+          value={stats.totalClicks.toLocaleString('fr-FR')}
           icon={MousePointer}
           color="blue"
         />
         <StatCard
           title="Taux de Conversion"
-          value={`${stats.conversionRate}%`}
-          change="+0.3%"
+          value={`${stats.conversionRate.toFixed(1)}%`}
           icon={TrendingUp}
           color="purple"
         />
         <StatCard
-          title="Tenues Actives"
+          title="Tenues Publiées"
           value={stats.totalOutfits}
           icon={Eye}
           color="orange"
@@ -240,43 +251,54 @@ export default function DashboardPage() {
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-500">Revenus ce Mois</span>
               <span className="text-lg font-semibold text-gray-900">
-                {stats.monthlyRevenue.toLocaleString()} €
+                {stats.monthlyRevenue.toLocaleString('fr-FR')} €
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-500">Clics Hebdomadaires</span>
+              <span className="text-sm text-gray-500">Clics ce Mois</span>
               <span className="text-lg font-semibold text-gray-900">
-                {stats.weeklyClicks.toLocaleString()}
+                {stats.monthlyClicks.toLocaleString('fr-FR')}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-500">Clics cette Semaine</span>
+              <span className="text-lg font-semibold text-gray-900">
+                {stats.weeklyClicks.toLocaleString('fr-FR')}
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div 
                 className="bg-green-500 h-2 rounded-full" 
-                style={{ width: '75%' }}
+                style={{ width: stats.monthlyClicks > 0 ? `${Math.min((stats.weeklyClicks / stats.monthlyClicks) * 100, 100)}%` : '0%' }}
               ></div>
             </div>
-            <p className="text-xs text-gray-500">75% de l'objectif mensuel atteint</p>
+            <p className="text-xs text-gray-500">
+              {stats.monthlyClicks > 0 ? `${Math.round((stats.weeklyClicks / stats.monthlyClicks) * 100)}%` : '0%'} des clics mensuels cette semaine
+            </p>
           </div>
         </div>
 
         <div className="bg-white shadow rounded-lg p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Activité Récente</h3>
           <div className="space-y-3">
-            <div className="flex items-center p-3 rounded-lg bg-gray-50">
-              <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
-              <span className="text-sm text-gray-600">Nouvelle tenue "Robe d'Été" publiée</span>
-              <span className="text-xs text-gray-400 ml-auto">il y a 2h</span>
-            </div>
-            <div className="flex items-center p-3 rounded-lg bg-gray-50">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-              <span className="text-sm text-gray-600">Étiquettes produit mises à jour pour "Trench Coat"</span>
-              <span className="text-xs text-gray-400 ml-auto">il y a 5h</span>
-            </div>
-            <div className="flex items-center p-3 rounded-lg bg-gray-50">
-              <div className="w-2 h-2 bg-purple-500 rounded-full mr-3"></div>
-              <span className="text-sm text-gray-600">Rapport mensuel généré</span>
-              <span className="text-xs text-gray-400 ml-auto">il y a 1j</span>
-            </div>
+            {recentActivity.length > 0 ? (
+              recentActivity.map((activity, index) => {
+                const timeAgo = getTimeAgo(activity.createdAt)
+                return (
+                  <div key={activity.id} className="flex items-center p-3 rounded-lg bg-gray-50">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                    <span className="text-sm text-gray-600">
+                      {activity.type === 'outfit_created' ? 'Nouvelle tenue' : 'Activité'}: "{activity.title}"
+                    </span>
+                    <span className="text-xs text-gray-400 ml-auto">{timeAgo}</span>
+                  </div>
+                )
+              })
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-sm text-gray-500">Aucune activité récente</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -300,38 +322,49 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {topOutfits.map((outfit) => (
-                  <div key={outfit.id} className="relative group">
-                    <div className="aspect-w-3 aspect-h-4 bg-gray-200 rounded-lg overflow-hidden">
-                      <img
-                        src={outfit.imageUrl}
-                        alt={outfit.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                      />
-                    </div>
-                    <div className="mt-3">
-                      <h4 className="text-sm font-medium text-gray-900 truncate">
-                        {outfit.title}
-                      </h4>
-                      <div className="mt-1 flex justify-between text-sm text-gray-500">
-                        <span>{outfit.clicks} clics</span>
-                        <span className="font-medium text-green-600">
-                          {outfit.revenue.toLocaleString()} €
-                        </span>
+              {topOutfits.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {topOutfits.map((outfit) => (
+                    <div key={outfit.id} className="relative group">
+                      <div className="aspect-w-3 aspect-h-4 bg-gray-200 rounded-lg overflow-hidden">
+                        <img
+                          src={outfit.imageUrl}
+                          alt={outfit.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                        />
                       </div>
-                      <div className="mt-2 text-xs text-gray-400 flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        {new Date((outfit as any).createdAt).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric'
-                        })}
+                      <div className="mt-3">
+                        <h4 className="text-sm font-medium text-gray-900 truncate">
+                          {outfit.title}
+                        </h4>
+                        <div className="mt-1 flex justify-between text-sm text-gray-500">
+                          <span>{outfit.clicks} clics</span>
+                          <span className="font-medium text-green-600">
+                            {outfit.revenue.toLocaleString('fr-FR')} €
+                          </span>
+                        </div>
+                        <div className="mt-1 text-xs text-gray-500">
+                          {outfit.productsCount} produit{outfit.productsCount > 1 ? 's' : ''}
+                        </div>
+                        <div className="mt-2 text-xs text-gray-400 flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {getTimeAgo(outfit.createdAt)}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">Aucune tenue publiée pour le moment</p>
+                  <button
+                    onClick={() => router.push('/dashboard/outfits')}
+                    className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Publier votre première tenue
+                  </button>
+                </div>
+              )}
             </div>
           </div>
     </div>
