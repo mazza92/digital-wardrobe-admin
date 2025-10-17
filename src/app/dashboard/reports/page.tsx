@@ -10,6 +10,7 @@ import {
   DollarSign,
   MousePointer,
   Eye,
+  Heart,
   X
 } from 'lucide-react'
 
@@ -32,6 +33,7 @@ interface ProductPerformance {
   brand: string
   clicks: number
   revenue: number
+  favorites: number
   conversionRate: number
   trend: 'up' | 'down' | 'stable'
 }
@@ -405,6 +407,9 @@ export default function ReportsPage() {
                     Revenus
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Total Sauvé
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Tendance
                   </th>
                 </tr>
@@ -433,6 +438,14 @@ export default function ReportsPage() {
                         <DollarSign className="h-4 w-4 text-gray-400 mr-2" />
                         <span className="text-sm text-gray-900">
                           {product.revenue.toLocaleString()} €
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <Heart className="h-4 w-4 text-gray-400 mr-2" />
+                        <span className="text-sm text-gray-900">
+                          {product.favorites || 0}
                         </span>
                       </div>
                     </td>

@@ -55,12 +55,39 @@ export async function GET(request: Request) {
           brand: analytic.product.brand,
           clicks: 0,
           revenue: 0,
+          favorites: 0,
           conversionRate: 0
         })
       }
       const stats = productStats.get(productId)
       stats.clicks += analytic.clicks
       stats.revenue += analytic.revenue || 0
+    })
+
+    // Add favorites data to products
+    const favoritesAnalytics = await prisma.favoritesAnalytics.findMany({
+      where: {
+        date: {
+          gte: startDate,
+          lte: endDate
+        }
+      },
+      include: {
+        product: true
+      }
+    })
+
+    // Filter favorites by selected brand if specified
+    const filteredFavorites = selectedBrand === 'all' 
+      ? favoritesAnalytics 
+      : favoritesAnalytics.filter(f => f.product.brand === selectedBrand)
+
+    filteredFavorites.forEach(favorite => {
+      const productId = favorite.product.id
+      if (productStats.has(productId)) {
+        const stats = productStats.get(productId)
+        stats.favorites += favorite.favorites
+      }
     })
 
     // Calculate conversion rates and trends

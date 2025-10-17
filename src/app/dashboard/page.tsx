@@ -281,12 +281,6 @@ export default function DashboardPage() {
           icon={Heart}
           color="pink"
         />
-        <StatCard
-          title="Produits Favorisés"
-          value={stats.uniqueProductsFavorited}
-          icon={Eye}
-          color="purple"
-        />
       </div>
 
       {/* Monthly Performance */}
