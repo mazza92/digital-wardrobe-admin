@@ -457,10 +457,12 @@ export default function OutfitsPage() {
   // Enhanced drag functionality for tags (desktop + mobile)
   const handleTagStart = (event: React.MouseEvent | React.TouchEvent, tagIndex: number) => {
     // Prevent default behavior for both mouse and touch to avoid page scrolling
-    try {
-      event.preventDefault()
-    } catch (e) {
-      // Ignore passive event listener errors
+    if (event.cancelable) {
+      try {
+        event.preventDefault()
+      } catch (e) {
+        // Ignore passive event listener errors
+      }
     }
     event.stopPropagation()
     setDraggedTagIndex(tagIndex)
@@ -473,10 +475,12 @@ export default function OutfitsPage() {
     if (!isDragging || draggedTagIndex === null || !selectedImage || !imageRef.current) return
     
     // Prevent default behavior for both mouse and touch to avoid page scrolling
-    try {
-      event.preventDefault()
-    } catch (e) {
-      // Ignore passive event listener errors
+    if (event.cancelable) {
+      try {
+        event.preventDefault()
+      } catch (e) {
+        // Ignore passive event listener errors
+      }
     }
     setHasMoved(true)
     
@@ -640,7 +644,9 @@ export default function OutfitsPage() {
     const imageElement = imageRef.current
     if (imageElement) {
       const handleWheel = (e: WheelEvent) => {
-        e.preventDefault()
+        if (e.cancelable) {
+          e.preventDefault()
+        }
         e.stopPropagation()
         const delta = e.deltaY > 0 ? 0.9 : 1.1
         setImageScale(prev => Math.max(0.5, Math.min(3, prev * delta)))
@@ -648,7 +654,9 @@ export default function OutfitsPage() {
 
       const handleTouchMove = (e: TouchEvent) => {
         if (e.touches.length === 2) {
-          e.preventDefault()
+          if (e.cancelable) {
+            e.preventDefault()
+          }
           const touch1 = e.touches[0]
           const touch2 = e.touches[1]
           const distance = Math.sqrt(

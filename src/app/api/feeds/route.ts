@@ -112,7 +112,7 @@ function parseXMLFeed(xmlText: string) {
             brand: brand,
             price: price,
             description: description || 'Beautiful product from Soeur',
-            imageUrl: imageLink || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OTk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==',
+            imageUrl: isValidImageUrl(imageLink) ? imageLink : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OTk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==',
             affiliateLink: link || '',
             category: extractCategoryFromTitle(title),
             availability: 'in stock'
@@ -183,4 +183,20 @@ function calculateRelevanceScore(product: any, searchWords: string[]): number {
   })
   
   return score
+}
+
+function isValidImageUrl(url: string): boolean {
+  if (!url || !url.startsWith('https://')) return false
+  
+  // Check for specific known broken image patterns
+  const brokenPatterns = [
+    'AUT1346TUESDAY25WMAR06_carre.jpg',
+    'ZAE-marron-carre.jpg',
+    'placeholder.jpg',
+    'no-image',
+    'missing'
+  ]
+  
+  // Allow most URLs, only filter out specific broken ones
+  return !brokenPatterns.some(pattern => url.includes(pattern))
 }
