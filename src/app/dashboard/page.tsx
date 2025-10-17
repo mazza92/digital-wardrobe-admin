@@ -16,12 +16,16 @@ import {
 interface DashboardStats {
   totalRevenue: number
   totalClicks: number
+  totalConversions: number
   conversionRate: number
   totalOutfits: number
   totalProducts: number
   monthlyRevenue: number
-  weeklyClicks: number
   monthlyClicks: number
+  monthlyConversions: number
+  weeklyRevenue: number
+  weeklyClicks: number
+  weeklyConversions: number
 }
 
 interface TopOutfit {
@@ -46,12 +50,16 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats>({
     totalRevenue: 0,
     totalClicks: 0,
+    totalConversions: 0,
     conversionRate: 0,
     totalOutfits: 0,
     totalProducts: 0,
     monthlyRevenue: 0,
+    monthlyClicks: 0,
+    monthlyConversions: 0,
+    weeklyRevenue: 0,
     weeklyClicks: 0,
-    monthlyClicks: 0
+    weeklyConversions: 0
   })
   const [topOutfits, setTopOutfits] = useState<TopOutfit[]>([])
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([])
@@ -93,12 +101,16 @@ export default function DashboardPage() {
       setStats({
         totalRevenue: 0,
         totalClicks: 0,
+        totalConversions: 0,
         conversionRate: 0,
         totalOutfits: 0,
         totalProducts: 0,
         monthlyRevenue: 0,
+        monthlyClicks: 0,
+        monthlyConversions: 0,
+        weeklyRevenue: 0,
         weeklyClicks: 0,
-        monthlyClicks: 0
+        weeklyConversions: 0
       })
     } finally {
       setIsLoading(false)
@@ -216,7 +228,7 @@ export default function DashboardPage() {
       </div>
 
       {/* KPI Cards - Mobile Optimized */}
-      <div className="grid grid-cols-2 gap-3 md:gap-5 lg:grid-cols-4 mb-6 md:mb-8">
+      <div className="grid grid-cols-2 gap-3 md:gap-5 lg:grid-cols-5 mb-6 md:mb-8">
         <StatCard
           title="Revenus Totaux"
           value={`${stats.totalRevenue.toLocaleString('fr-FR')} €`}
@@ -230,16 +242,22 @@ export default function DashboardPage() {
           color="blue"
         />
         <StatCard
-          title="Taux de Conversion"
-          value={`${stats.conversionRate.toFixed(1)}%`}
+          title="Ventes Totales"
+          value={stats.totalConversions.toLocaleString('fr-FR')}
           icon={TrendingUp}
           color="purple"
+        />
+        <StatCard
+          title="Taux de Conversion"
+          value={`${stats.conversionRate.toFixed(1)}%`}
+          icon={BarChart3}
+          color="orange"
         />
         <StatCard
           title="Tenues Publiées"
           value={stats.totalOutfits}
           icon={Eye}
-          color="orange"
+          color="blue"
         />
       </div>
 
@@ -261,9 +279,21 @@ export default function DashboardPage() {
               </span>
             </div>
             <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-500">Ventes ce Mois</span>
+              <span className="text-lg font-semibold text-gray-900">
+                {stats.monthlyConversions.toLocaleString('fr-FR')}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
               <span className="text-sm text-gray-500">Clics cette Semaine</span>
               <span className="text-lg font-semibold text-gray-900">
                 {stats.weeklyClicks.toLocaleString('fr-FR')}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-500">Ventes cette Semaine</span>
+              <span className="text-lg font-semibold text-gray-900">
+                {stats.weeklyConversions.toLocaleString('fr-FR')}
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { AffilaeAnalytics } from '@/lib/affilae'
 
 export async function GET() {
   try {
@@ -21,65 +22,46 @@ export async function GET() {
       take: 3
     })
 
-    // Get analytics data (if available)
-    const analytics = await prisma.productAnalytics.findMany({
-      include: {
-        product: {
-          include: {
-            outfit: true
-          }
-        }
-      }
-    })
+    // Get real analytics data from Affilae API
+    const [
+      overallPerformance,
+      monthlyPerformance,
+      weeklyPerformance
+    ] = await Promise.all([
+      AffilaeAnalytics.getOverallPerformance(),
+      AffilaeAnalytics.getMonthlyPerformance(),
+      AffilaeAnalytics.getWeeklyPerformance()
+    ])
 
-    // Calculate total clicks and revenue from analytics
-    const totalClicks = analytics.reduce((sum, analytic) => sum + analytic.clicks, 0)
-    const totalRevenue = analytics.reduce((sum, analytic) => sum + (analytic.revenue || 0), 0)
-    
-    // Calculate conversion rate
-    const conversionRate = totalClicks > 0 ? (totalRevenue / totalClicks * 100) : 0
+    const {
+      totalClicks,
+      totalConversions,
+      totalRevenue,
+      conversionRate
+    } = overallPerformance
 
-    // Get monthly data (last 30 days)
-    const thirtyDaysAgo = new Date()
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-    
-    const monthlyAnalytics = await prisma.productAnalytics.findMany({
-      where: {
-        date: {
-          gte: thirtyDaysAgo
-        }
-      }
-    })
+    const {
+      clicks: monthlyClicks,
+      conversions: monthlyConversions,
+      revenue: monthlyRevenue
+    } = monthlyPerformance
 
-    const monthlyRevenue = monthlyAnalytics.reduce((sum, analytic) => sum + (analytic.revenue || 0), 0)
-    const monthlyClicks = monthlyAnalytics.reduce((sum, analytic) => sum + analytic.clicks, 0)
-
-    // Get weekly data (last 7 days)
-    const sevenDaysAgo = new Date()
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-    
-    const weeklyAnalytics = await prisma.productAnalytics.findMany({
-      where: {
-        date: {
-          gte: sevenDaysAgo
-        }
-      }
-    })
-
-    const weeklyClicks = weeklyAnalytics.reduce((sum, analytic) => sum + analytic.clicks, 0)
+    const {
+      clicks: weeklyClicks,
+      conversions: weeklyConversions,
+      revenue: weeklyRevenue
+    } = weeklyPerformance
 
     // Format recent outfits for display
+    // Note: Individual outfit analytics would require more complex Affilae API calls
+    // For now, we'll show the outfits with placeholder analytics
     const formattedRecentOutfits = recentOutfits.map(outfit => {
-      const outfitAnalytics = analytics.filter(a => a.product.outfitId === outfit.id)
-      const outfitClicks = outfitAnalytics.reduce((sum, analytic) => sum + analytic.clicks, 0)
-      const outfitRevenue = outfitAnalytics.reduce((sum, analytic) => sum + (analytic.revenue || 0), 0)
-
       return {
         id: outfit.id,
         title: outfit.title,
         imageUrl: outfit.imageUrl,
-        clicks: outfitClicks,
-        revenue: outfitRevenue,
+        clicks: 0, // TODO: Implement individual outfit analytics from Affilae
+        revenue: 0, // TODO: Implement individual outfit analytics from Affilae
         createdAt: outfit.createdAt,
         productsCount: outfit.products.length
       }
@@ -101,12 +83,16 @@ export async function GET() {
       stats: {
         totalRevenue: Math.round(totalRevenue * 100) / 100,
         totalClicks,
+        totalConversions,
         conversionRate: Math.round(conversionRate * 100) / 100,
         totalOutfits,
         totalProducts,
         monthlyRevenue: Math.round(monthlyRevenue * 100) / 100,
+        monthlyClicks,
+        monthlyConversions,
+        weeklyRevenue: Math.round(weeklyRevenue * 100) / 100,
         weeklyClicks,
-        monthlyClicks
+        weeklyConversions
       },
       recentOutfits: formattedRecentOutfits,
       recentActivity: recentActivity.map(activity => ({
