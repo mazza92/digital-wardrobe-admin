@@ -47,11 +47,29 @@ export async function POST(request: NextRequest) {
     })
 
     return response
-  } catch (error) {
+  } catch (error: any) {
     console.error('Login error:', error)
+    
+    // Check if this is a database connection error
+    const isConnectionError = error?.message?.includes("Can't reach database server") || 
+                              error?.message?.includes('connect') ||
+                              error?.code === 'P1001' ||
+                              error?.name === 'PrismaClientInitializationError'
+    
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { 
+        error: isConnectionError ? 'Database connection failed' : 'Internal server error',
+        message: isConnectionError ? 'Unable to connect to database. Please check your database configuration.' : 'An unexpected error occurred',
+        type: isConnectionError ? 'connection_error' : 'unknown_error',
+        ...(isConnectionError && {
+          troubleshooting: {
+            checkEnvironmentVariable: 'Verify DATABASE_URL is set correctly in Vercel environment variables',
+            checkSupabaseStatus: 'Check if your Supabase instance is running and accessible',
+            healthCheck: 'Check /api/health/db endpoint for database connectivity status'
+          }
+        })
+      },
+      { status: isConnectionError ? 503 : 500 }
     )
   }
 }

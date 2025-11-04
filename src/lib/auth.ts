@@ -45,9 +45,20 @@ export async function getUserByEmail(email: string) {
     })
     console.log('👤 Database query result:', user ? 'user found' : 'no user found')
     return user
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Database error in getUserByEmail:', error)
-    return null
+    
+    // Re-throw connection errors so they can be handled properly
+    const isConnectionError = error?.message?.includes("Can't reach database server") || 
+                              error?.message?.includes('connect') ||
+                              error?.code === 'P1001' ||
+                              error?.name === 'PrismaClientInitializationError'
+    
+    if (isConnectionError) {
+      throw error // Re-throw connection errors
+    }
+    
+    return null // Return null for other errors (e.g., query errors)
   }
 }
 

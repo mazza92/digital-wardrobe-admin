@@ -130,18 +130,34 @@ export async function GET() {
       code: error?.code
     })
     
+    // Check if this is a database connection error
+    const isConnectionError = error?.message?.includes("Can't reach database server") || 
+                              error?.message?.includes('connect') ||
+                              error?.code === 'P1001' ||
+                              error?.name === 'PrismaClientInitializationError'
+    
     // More detailed error response for debugging
     const errorMessage = error?.message || 'Unknown error occurred'
     const errorCode = error?.code || 'UNKNOWN_ERROR'
     
     return NextResponse.json(
       { 
-        error: 'Failed to export outfits',
+        error: isConnectionError ? 'Database connection failed' : 'Failed to export outfits',
         message: errorMessage,
-        code: errorCode
+        code: errorCode,
+        type: isConnectionError ? 'connection_error' : 'unknown_error',
+        ...(isConnectionError && {
+          troubleshooting: {
+            checkEnvironmentVariable: 'Verify DATABASE_URL is set correctly in Vercel environment variables',
+            checkSupabaseStatus: 'Check if your Supabase instance is running and accessible',
+            checkConnectionString: 'Verify the connection string format matches your Supabase setup',
+            directConnection: 'Consider using direct connection (port 5432) instead of pooler (port 6543) for Prisma operations',
+            healthCheck: 'Check /api/health/db endpoint for database connectivity status'
+          }
+        })
       },
       { 
-        status: 500,
+        status: isConnectionError ? 503 : 500,
         headers: {
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
