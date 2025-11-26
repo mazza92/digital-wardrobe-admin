@@ -93,3 +93,6 @@ After fixing the connection string:
 3. Try using direct connection string (port 5432) as a test
 4. Contact Supabase support if database instance is unreachable
 
+
+
+
