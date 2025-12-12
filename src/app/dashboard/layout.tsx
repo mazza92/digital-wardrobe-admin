@@ -11,7 +11,9 @@ import {
   Menu, 
   X,
   User,
-  UserCircle
+  UserCircle,
+  ShoppingBag,
+  Package
 } from 'lucide-react'
 
 interface User {
@@ -59,6 +61,8 @@ export default function DashboardLayout({
   const navigation = [
     { name: 'Tableau de Bord', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Tenues', href: '/dashboard/outfits', icon: Shirt },
+    { name: 'Ma Boutique', href: '/dashboard/shop', icon: ShoppingBag },
+    { name: 'Commandes', href: '/dashboard/orders', icon: Package },
     { name: 'Rapports', href: '/dashboard/reports', icon: BarChart3 },
     { name: 'Profil', href: '/dashboard/profile', icon: UserCircle },
   ]

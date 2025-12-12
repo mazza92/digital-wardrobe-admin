@@ -128,3 +128,118 @@ model Profile {
   
   @@map("profiles")
 }
+
+// ============================================
+// E-COMMERCE MODELS
+// ============================================
+
+model ShopProduct {
+  id              String   @id @default(cuid())
+  name            String
+  nameEn          String?  // English translation
+  description     String?
+  descriptionEn   String?  // English translation
+  price           Float    // Price in EUR (cents stored as float for simplicity)
+  compareAtPrice  Float?   // Original price for showing discounts
+  imageUrl        String
+  images          String[] // Additional product images
+  category        String   @default("accessory") // accessory, clothing, jewelry, etc.
+  sku             String?  @unique // Stock Keeping Unit
+  stock           Int      @default(0)
+  lowStockAlert   Int      @default(5) // Alert when stock falls below this
+  isActive        Boolean  @default(true)
+  isFeatured      Boolean  @default(false)
+  stripeProductId String?  // Stripe product ID
+  stripePriceId   String?  // Stripe price ID
+  weight          Float?   // Weight in grams (for shipping)
+  
+  orderItems      OrderItem[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([isActive, isFeatured])
+  @@index([category])
+  @@index([stock])
+  @@map("shop_products")
+}
+
+model Order {
+  id                String      @id @default(cuid())
+  orderNumber       String      @unique // Human-readable order number (e.g., EK-2024-0001)
+  status            OrderStatus @default(PENDING)
+  
+  // Customer info (can be guest or authenticated)
+  customerId        String?     // Supabase user ID if authenticated
+  customerEmail     String
+  customerName      String
+  
+  // Shipping address
+  shippingAddress   Json        // { line1, line2, city, postalCode, country, phone }
+  
+  // Pricing
+  subtotal          Float       // Sum of items
+  shippingCost      Float       @default(0)
+  taxAmount         Float       @default(0)
+  discount          Float       @default(0)
+  total             Float       // Final total
+  
+  // Payment
+  stripeSessionId   String?     // Stripe checkout session ID
+  stripePaymentId   String?     // Stripe payment intent ID
+  paymentMethod     String?     // card, paypal, etc.
+  paidAt            DateTime?
+  
+  // Fulfillment
+  trackingNumber    String?
+  trackingUrl       String?
+  shippedAt         DateTime?
+  deliveredAt       DateTime?
+  
+  // Notes
+  customerNote      String?
+  internalNote      String?
+  
+  items             OrderItem[]
+  
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  @@index([customerId])
+  @@index([customerEmail])
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String      @id @default(cuid())
+  orderId     String
+  productId   String
+  
+  // Snapshot of product at time of order (in case product changes)
+  productName String
+  productSku  String?
+  unitPrice   Float
+  quantity    Int
+  total       Float       // unitPrice * quantity
+  
+  order       Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     ShopProduct @relation(fields: [productId], references: [id])
+  
+  createdAt   DateTime    @default(now())
+  
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+enum OrderStatus {
+  PENDING           // Order created, awaiting payment
+  PAID              // Payment received
+  PROCESSING        // Being prepared for shipping
+  SHIPPED           // Shipped, tracking available
+  DELIVERED         // Delivered to customer
+  CANCELLED         // Order cancelled
+  REFUNDED          // Payment refunded
+}
