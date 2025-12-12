@@ -710,7 +710,9 @@ export default function OutfitsPage() {
     if (draftOutfit) {
       setNewOutfit({
         title: draftOutfit.title,
+        titleEn: '',
         description: draftOutfit.description,
+        descriptionEn: '',
         imageUrl: draftOutfit.imageUrl || '',
         category: draftOutfit.category || 'outfit'
       })

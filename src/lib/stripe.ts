@@ -8,10 +8,7 @@ if (!stripeSecretKey && process.env.NODE_ENV === 'production') {
 }
 
 export const stripe = stripeSecretKey 
-  ? new Stripe(stripeSecretKey, {
-      apiVersion: '2025-05-28.basil',
-      typescript: true,
-    })
+  ? new Stripe(stripeSecretKey)
   : null
 
 // Shipping rates (in EUR)
