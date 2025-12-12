@@ -334,6 +334,22 @@ function OrderActions({
   return (
     <>
       <div className="flex items-center gap-2 flex-wrap">
+        {/* Mark as Paid action - for manual payment confirmation */}
+        {order.status === 'PENDING' && (
+          <button
+            onClick={() => {
+              if (confirm('Confirmer que le paiement a été reçu ?')) {
+                onStatusChange('PAID')
+              }
+            }}
+            disabled={isUpdating}
+            className="px-3 py-1.5 text-xs font-medium bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors flex items-center gap-1.5"
+          >
+            <CreditCard className="w-3.5 h-3.5" />
+            Marquer payé
+          </button>
+        )}
+        
         {/* Processing action */}
         {order.status === 'PAID' && (
           <button
