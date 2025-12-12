@@ -64,6 +64,7 @@ export async function GET() {
             title: outfit.title || '',
             image: outfit.imageUrl || '',
             description: outfit.description || '',
+            descriptionEn: outfit.descriptionEn || '',
             category: outfit.category || 'outfit',
             createdAt: outfit.createdAt ? outfit.createdAt.toISOString() : new Date().toISOString(),
             products: (outfit.products || []).map(product => {
@@ -100,6 +101,7 @@ export async function GET() {
             title: outfit.title || '',
             image: outfit.imageUrl || '',
             description: '',
+            descriptionEn: '',
             category: 'outfit',
             createdAt: new Date().toISOString(),
             products: []
