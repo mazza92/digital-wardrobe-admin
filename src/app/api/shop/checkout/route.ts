@@ -185,7 +185,7 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Create Stripe checkout session
+    // Create Stripe checkout session with branding
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card', 'paypal'],
@@ -203,6 +203,23 @@ export async function POST(request: NextRequest) {
       billing_address_collection: 'required',
       locale: 'fr',
       expires_at: Math.floor(Date.now() / 1000) + 30 * 60, // 30 minutes
+      // Branding & UX customization
+      custom_text: {
+        submit: {
+          message: 'Paiement sécurisé par Stripe. Livraison sous 3-5 jours ouvrés.'
+        },
+        shipping_address: {
+          message: 'Nous livrons en France et en Europe.'
+        }
+      },
+      consent_collection: {
+        terms_of_service: 'none', // Set to 'required' if you have ToS
+      },
+      phone_number_collection: {
+        enabled: true
+      },
+      // Allow customers to adjust quantities
+      allow_promotion_codes: true, // Enable promo codes
     })
 
     // Update order with Stripe session ID
