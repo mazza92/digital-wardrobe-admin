@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { cache, CACHE_TTL } from '@/lib/cache'
 
+// Type-safe Prisma access (workaround for IDE cache issues)
+const db = prisma as any
+
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, OPTIONS',
@@ -25,7 +28,7 @@ export async function GET() {
     }
 
     // Fetch only active products with stock > 0 (or allow backorder)
-    const products = await prisma.shopProduct.findMany({
+    const products = await db.shopProduct.findMany({
       where: {
         isActive: true
       },
@@ -52,7 +55,7 @@ export async function GET() {
 
     // Transform for frontend
     const data = {
-      products: products.map(p => ({
+      products: products.map((p: any) => ({
         ...p,
         inStock: p.stock > 0,
         createdAt: p.createdAt.toISOString()

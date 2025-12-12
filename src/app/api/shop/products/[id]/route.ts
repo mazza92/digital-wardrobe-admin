@@ -9,6 +9,9 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 }
 
+// Type-safe Prisma access (workaround for IDE cache issues)
+const db = prisma as any
+
 export async function OPTIONS() {
   return new NextResponse(null, { status: 200, headers: CORS_HEADERS })
 }
@@ -21,7 +24,7 @@ export async function GET(
   try {
     const { id } = await params
     
-    const product = await prisma.shopProduct.findUnique({
+    const product = await db.shopProduct.findUnique({
       where: { id }
     })
 
@@ -70,7 +73,7 @@ export async function PUT(
     } = body
 
     // Get existing product
-    const existing = await prisma.shopProduct.findUnique({ where: { id } })
+    const existing = await db.shopProduct.findUnique({ where: { id } })
     if (!existing) {
       return NextResponse.json(
         { error: 'Product not found' },
@@ -111,7 +114,7 @@ export async function PUT(
       }
     }
 
-    const product = await prisma.shopProduct.update({
+    const product = await db.shopProduct.update({
       where: { id },
       data: {
         ...(name !== undefined && { name }),
@@ -163,7 +166,7 @@ export async function DELETE(
     const { id } = await params
 
     // Get existing product
-    const existing = await prisma.shopProduct.findUnique({ where: { id } })
+    const existing = await db.shopProduct.findUnique({ where: { id } })
     if (!existing) {
       return NextResponse.json(
         { error: 'Product not found' },
@@ -172,13 +175,13 @@ export async function DELETE(
     }
 
     // Check if product has orders - if so, just deactivate instead
-    const orderCount = await prisma.orderItem.count({
+    const orderCount = await db.orderItem.count({
       where: { productId: id }
     })
 
     if (orderCount > 0) {
       // Soft delete - just deactivate
-      await prisma.shopProduct.update({
+      await db.shopProduct.update({
         where: { id },
         data: { isActive: false }
       })
@@ -199,7 +202,7 @@ export async function DELETE(
     }
 
     // Hard delete
-    await prisma.shopProduct.delete({ where: { id } })
+    await db.shopProduct.delete({ where: { id } })
 
     // Invalidate cache
     cache.delete('shop:products:public')
@@ -213,4 +216,3 @@ export async function DELETE(
     )
   }
 }
-

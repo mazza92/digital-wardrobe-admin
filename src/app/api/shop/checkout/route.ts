@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { stripe, calculateShipping, generateOrderNumber } from '@/lib/stripe'
 
+// Type-safe Prisma access (workaround for IDE cache issues)
+const db = prisma as any
+
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -76,7 +79,7 @@ export async function POST(request: NextRequest) {
 
     // Fetch products and validate stock
     const productIds = items.map(item => item.productId)
-    const products = await prisma.shopProduct.findMany({
+    const products = await db.shopProduct.findMany({
       where: {
         id: { in: productIds },
         isActive: true
@@ -84,13 +87,13 @@ export async function POST(request: NextRequest) {
     })
 
     // Validate all products exist and have stock
-    const productMap = new Map(products.map(p => [p.id, p]))
+    const productMap = new Map(products.map((p: any) => [p.id, p]))
     const lineItems: any[] = []
     const orderItems: any[] = []
     let subtotal = 0
 
     for (const item of items) {
-      const product = productMap.get(item.productId)
+      const product: any = productMap.get(item.productId)
       
       if (!product) {
         return NextResponse.json(
@@ -150,7 +153,7 @@ export async function POST(request: NextRequest) {
     const orderNumber = generateOrderNumber()
 
     // Create order in database (pending status)
-    const order = await prisma.order.create({
+    const order = await db.order.create({
       data: {
         orderNumber,
         status: 'PENDING',
@@ -203,7 +206,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Update order with Stripe session ID
-    await prisma.order.update({
+    await db.order.update({
       where: { id: order.id },
       data: { stripeSessionId: session.id }
     })

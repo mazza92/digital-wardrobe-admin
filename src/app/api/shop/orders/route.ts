@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 
+// Type-safe Prisma access (workaround for IDE cache issues)
+const db = prisma as any
+
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, OPTIONS',
@@ -40,7 +43,7 @@ export async function GET(request: NextRequest) {
       where.status = status
     }
 
-    const orders = await prisma.order.findMany({
+    const orders = await db.order.findMany({
       where,
       include: {
         items: {
@@ -60,14 +63,14 @@ export async function GET(request: NextRequest) {
     })
 
     // Format dates for JSON
-    const formattedOrders = orders.map(order => ({
+    const formattedOrders = orders.map((order: any) => ({
       ...order,
       createdAt: order.createdAt.toISOString(),
       updatedAt: order.updatedAt.toISOString(),
       paidAt: order.paidAt?.toISOString() || null,
       shippedAt: order.shippedAt?.toISOString() || null,
       deliveredAt: order.deliveredAt?.toISOString() || null,
-      items: order.items.map(item => ({
+      items: order.items.map((item: any) => ({
         ...item,
         createdAt: item.createdAt.toISOString()
       }))

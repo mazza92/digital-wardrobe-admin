@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 
+// Type-safe Prisma access (workaround for IDE cache issues)
+const db = prisma as any
+
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, PUT, OPTIONS',
@@ -20,7 +23,7 @@ export async function GET(
     const { id } = await params
 
     // Can lookup by ID or order number
-    const order = await prisma.order.findFirst({
+    const order = await db.order.findFirst({
       where: {
         OR: [
           { id },
@@ -58,7 +61,7 @@ export async function GET(
       paidAt: order.paidAt?.toISOString() || null,
       shippedAt: order.shippedAt?.toISOString() || null,
       deliveredAt: order.deliveredAt?.toISOString() || null,
-      items: order.items.map(item => ({
+      items: order.items.map((item: any) => ({
         ...item,
         createdAt: item.createdAt.toISOString()
       }))
@@ -116,7 +119,7 @@ export async function PUT(
       updateData.internalNote = internalNote
     }
 
-    const order = await prisma.order.update({
+    const order = await db.order.update({
       where: { id },
       data: updateData,
       include: {

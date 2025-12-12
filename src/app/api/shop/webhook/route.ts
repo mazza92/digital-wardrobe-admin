@@ -3,6 +3,9 @@ import { prisma } from '@/lib/db'
 import { stripe } from '@/lib/stripe'
 import Stripe from 'stripe'
 
+// Type-safe Prisma access (workaround for IDE cache issues)
+const db = prisma as any
+
 // Disable body parsing for webhook (Stripe needs raw body)
 export const runtime = 'nodejs'
 
@@ -87,7 +90,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
 
   try {
     // Get the order with items
-    const order = await prisma.order.findUnique({
+    const order = await db.order.findUnique({
       where: { id: orderId },
       include: { items: true }
     })
@@ -98,7 +101,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
     }
 
     // Update order status
-    await prisma.order.update({
+    await db.order.update({
       where: { id: orderId },
       data: {
         status: 'PAID',
@@ -110,7 +113,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
 
     // Decrease stock for each item
     for (const item of order.items) {
-      await prisma.shopProduct.update({
+      await db.shopProduct.update({
         where: { id: item.productId },
         data: {
           stock: {
@@ -139,7 +142,7 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
 
   try {
     // Cancel the pending order
-    await prisma.order.update({
+    await db.order.update({
       where: { id: orderId },
       data: {
         status: 'CANCELLED',

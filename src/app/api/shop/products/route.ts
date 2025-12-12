@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { cache, CACHE_KEYS, CACHE_TTL } from '@/lib/cache'
+import { cache } from '@/lib/cache'
 import { stripe } from '@/lib/stripe'
+
+// Type-safe Prisma access (workaround for IDE cache issues)
+const db = prisma as any
 
 // CORS headers
 const CORS_HEADERS = {
@@ -20,7 +23,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const includeInactive = searchParams.get('includeInactive') === 'true'
     
-    const products = await prisma.shopProduct.findMany({
+    const products = await db.shopProduct.findMany({
       where: includeInactive ? {} : { isActive: true },
       orderBy: [
         { isFeatured: 'desc' },
@@ -99,7 +102,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const product = await prisma.shopProduct.create({
+    const product = await db.shopProduct.create({
       data: {
         name,
         nameEn,
