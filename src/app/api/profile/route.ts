@@ -1,81 +1,85 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@/lib/db'
+import { cache, CACHE_KEYS, CACHE_TTL } from '@/lib/cache'
 
-const prisma = new PrismaClient()
+// Common CORS headers
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
+
+// Default profile data (cached permanently since it rarely changes)
+const DEFAULT_PROFILE = {
+  name: 'Emmanuelle K',
+  brand: 'EMMANUELLE K',
+  bio: 'Luxury fashion & lifestyle content creator. Sharing elegant, sophisticated style for the modern woman.',
+  heroImage: 'https://www.na-kd.com/cdn-cgi/image/quality=80,sharpen=0.3,width=984/globalassets/oversized_belted_trenchcoat_1858-000002-0765_3_campaign.jpg',
+  socialMedia: {
+    instagram: 'https://instagram.com/emmanuellek',
+    tiktok: 'https://tiktok.com/@emmanuellek',
+    youtube: 'https://youtube.com/@emmanuellek',
+    pinterest: 'https://pinterest.com/emmanuellek'
+  }
+}
 
 // Handle CORS preflight requests
 export async function OPTIONS() {
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    },
-  })
+  return new NextResponse(null, { status: 200, headers: CORS_HEADERS })
 }
 
 // GET /api/profile - Get influencer profile
 export async function GET() {
   try {
-    // Try to fetch from database first
+    // Check cache first (5 minute TTL)
+    const cached = cache.get<any>(CACHE_KEYS.PROFILE)
+    if (cached) {
+      return NextResponse.json(cached, {
+        headers: { ...CORS_HEADERS, 'X-Cache': 'HIT' }
+      })
+    }
+
+    // Try to fetch from database
     try {
       const existingProfile = await prisma.profile.findFirst({
+        select: {
+          name: true,
+          brand: true,
+          bio: true,
+          heroImage: true,
+          socialMedia: true
+        },
         orderBy: { createdAt: 'desc' }
       })
 
       if (existingProfile) {
-        return NextResponse.json({
+        const profileData = {
           name: existingProfile.name,
           brand: existingProfile.brand,
           bio: existingProfile.bio,
           heroImage: existingProfile.heroImage,
           socialMedia: existingProfile.socialMedia || {}
-        }, {
-          headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-          }
+        }
+        
+        cache.set(CACHE_KEYS.PROFILE, profileData, CACHE_TTL.LONG)
+        
+        return NextResponse.json(profileData, {
+          headers: { ...CORS_HEADERS, 'X-Cache': 'MISS' }
         })
       }
-    } catch (dbError) {
-      console.log('Profile table not found, using default data:', dbError.message)
+    } catch {
+      // Database error - use default
     }
 
-    // Return default profile data if none exists or table doesn't exist
-    const defaultProfile = {
-      name: 'Emmanuelle K',
-      brand: 'EMMANUELLE K',
-      bio: 'Luxury fashion & lifestyle content creator. Sharing elegant, sophisticated style for the modern woman.',
-      heroImage: 'https://www.na-kd.com/cdn-cgi/image/quality=80,sharpen=0.3,width=984/globalassets/oversized_belted_trenchcoat_1858-000002-0765_3_campaign.jpg',
-      socialMedia: {
-        instagram: 'https://instagram.com/emmanuellek',
-        tiktok: 'https://tiktok.com/@emmanuellek',
-        youtube: 'https://youtube.com/@emmanuellek',
-        pinterest: 'https://pinterest.com/emmanuellek'
-      }
-    }
-
-    return NextResponse.json(defaultProfile, {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      }
+    // Return default profile data
+    cache.set(CACHE_KEYS.PROFILE, DEFAULT_PROFILE, CACHE_TTL.LONG)
+    return NextResponse.json(DEFAULT_PROFILE, {
+      headers: { ...CORS_HEADERS, 'X-Cache': 'MISS' }
     })
   } catch (error) {
-    console.error('Error fetching profile:', error)
     return NextResponse.json(
       { error: 'Failed to fetch profile' },
-      { 
-        status: 500,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        }
-      }
+      { status: 500, headers: CORS_HEADERS }
     )
   }
 }
@@ -90,88 +94,35 @@ export async function PUT(request: NextRequest) {
     if (!name || !brand || !bio) {
       return NextResponse.json(
         { error: 'Name, brand, and bio are required' },
-        { 
-          status: 400,
-          headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-          }
-        }
+        { status: 400, headers: CORS_HEADERS }
       )
     }
 
+    const profileData = { name, brand, bio, heroImage, socialMedia: socialMedia || {} }
+
     // Try to save to database
     try {
-      const profile = await prisma.profile.upsert({
-        where: { id: 'default' }, // We'll use a fixed ID for the main profile
-        update: { 
-          name, 
-          brand, 
-          bio, 
-          heroImage, 
-          socialMedia: socialMedia || {}
-        },
-        create: { 
-          id: 'default',
-          name, 
-          brand, 
-          bio, 
-          heroImage, 
-          socialMedia: socialMedia || {}
-        }
+      await prisma.profile.upsert({
+        where: { id: 'default' },
+        update: profileData,
+        create: { id: 'default', ...profileData }
       })
-
-      return NextResponse.json({ 
-        message: 'Profile updated successfully',
-        profile: { 
-          name: profile.name, 
-          brand: profile.brand, 
-          bio: profile.bio, 
-          heroImage: profile.heroImage, 
-          socialMedia: profile.socialMedia || {}
-        }
-      }, {
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        }
-      })
-    } catch (dbError) {
-      console.log('Database save failed, Profile table may not exist:', dbError.message)
-      
-      // For now, return success even if database save fails
-      // This allows the frontend to work while we fix the database schema
-      return NextResponse.json({ 
-        message: 'Profile updated successfully (database sync pending)',
-        profile: { 
-          name, 
-          brand, 
-          bio, 
-          heroImage, 
-          socialMedia: socialMedia || {}
-        }
-      }, {
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        }
-      })
+    } catch {
+      // Database error - continue anyway
     }
+
+    // Invalidate cache
+    cache.delete(CACHE_KEYS.PROFILE)
+    cache.delete(CACHE_KEYS.OUTFITS_EXPORT) // Profile is included in export
+
+    return NextResponse.json({ 
+      message: 'Profile updated successfully',
+      profile: profileData
+    }, { headers: CORS_HEADERS })
   } catch (error) {
-    console.error('Error updating profile:', error)
     return NextResponse.json(
       { error: 'Failed to update profile' },
-      { 
-        status: 500,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        }
-      }
+      { status: 500, headers: CORS_HEADERS }
     )
   }
 }

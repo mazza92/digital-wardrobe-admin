@@ -1,172 +1,147 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { cache, CACHE_KEYS, CACHE_TTL } from '@/lib/cache'
+
+// Precompiled regex for better performance
+const HTML_ENTITY_REGEX = /&[a-zA-Z0-9#]+;/g
+const ENTITIES_MAP: Record<string, string> = {
+  '&amp;': '&',
+  '&lt;': '<',
+  '&gt;': '>',
+  '&quot;': '"',
+  '&#39;': "'",
+  '&nbsp;': ' '
+}
 
 function decodeHtmlEntities(text: string): string {
-  const entities: { [key: string]: string } = {
-    '&amp;': '&',
-    '&lt;': '<',
-    '&gt;': '>',
-    '&quot;': '"',
-    '&#39;': "'",
-    '&nbsp;': ' '
+  return text.replace(HTML_ENTITY_REGEX, (entity) => ENTITIES_MAP[entity] || entity)
+}
+
+// Static data that never changes - cached permanently
+const STATIC_DATA = {
+  influencer: {
+    name: "Emmanuelle K",
+    brand: "EMMANUELLE K",
+    heroImage: "https://www.na-kd.com/cdn-cgi/image/quality=80,sharpen=0.3,width=984/globalassets/oversized_belted_trenchcoat_1858-000002-0765_3_campaign.jpg",
+    bio: "Luxury fashion & lifestyle content creator. Sharing elegant, sophisticated style for the modern woman."
+  },
+  socialMedia: {
+    instagram: "https://instagram.com/emmanuellek_",
+    tiktok: "https://tiktok.com/@emmanuellek_",
+    youtube: "https://youtube.com/@emmanuellek_",
+    pinterest: "https://pinterest.com/emmanuellek_"
   }
-  
-  return text.replace(/&[a-zA-Z0-9#]+;/g, (entity) => {
-    return entities[entity] || entity
-  })
+}
+
+// Common CORS headers
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 }
 
 export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    },
+    headers: CORS_HEADERS,
   })
 }
 
 export async function GET() {
   try {
-    console.log('Fetching published outfits...')
-    
-    const outfits = await prisma.outfit.findMany({
-      where: {
-        isPublished: true
-      },
-      include: {
-        products: {
-          orderBy: {
-            createdAt: 'asc'
-          }
+    // Check cache first (60 second TTL)
+    const cached = cache.get<any>(CACHE_KEYS.OUTFITS_EXPORT)
+    if (cached) {
+      return NextResponse.json(cached, {
+        headers: {
+          ...CORS_HEADERS,
+          'X-Cache': 'HIT',
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
         }
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
-    })
-    
-    console.log('Found outfits:', outfits.length)
-
-    // Transform to match frontend format with safe error handling
-    const frontendData = {
-      influencer: {
-        name: "Emmanuelle K",
-        brand: "EMMANUELLE K",
-        heroImage: "https://www.na-kd.com/cdn-cgi/image/quality=80,sharpen=0.3,width=984/globalassets/oversized_belted_trenchcoat_1858-000002-0765_3_campaign.jpg",
-        bio: "Luxury fashion & lifestyle content creator. Sharing elegant, sophisticated style for the modern woman."
-      },
-      outfits: outfits.map(outfit => {
-        try {
-          return {
-            id: outfit.id || '',
-            title: outfit.title || '',
-            titleEn: outfit.titleEn || '',
-            image: outfit.imageUrl || '',
-            description: outfit.description || '',
-            descriptionEn: outfit.descriptionEn || '',
-            category: outfit.category || 'outfit',
-            createdAt: outfit.createdAt ? outfit.createdAt.toISOString() : new Date().toISOString(),
-            products: (outfit.products || []).map(product => {
-              try {
-                return {
-                  id: product.id || '',
-                  name: product.name || '',
-                  brand: product.brand || '',
-                  price: product.price || '',
-                  imageUrl: product.imageUrl || '',
-                  link: product.affiliateLink ? decodeHtmlEntities(product.affiliateLink) : '',
-                  x: typeof product.x === 'number' ? product.x : 0,
-                  y: typeof product.y === 'number' ? product.y : 0
-                }
-              } catch (productError: any) {
-                console.error('Error processing product:', product.id, productError)
-                return {
-                  id: product.id || '',
-                  name: product.name || '',
-                  brand: product.brand || '',
-                  price: '',
-                  imageUrl: '',
-                  link: '',
-                  x: 0,
-                  y: 0
-                }
-              }
-            })
-          }
-        } catch (outfitError: any) {
-          console.error('Error processing outfit:', outfit.id, outfitError)
-          return {
-            id: outfit.id || '',
-            title: outfit.title || '',
-            titleEn: '',
-            image: outfit.imageUrl || '',
-            description: '',
-            descriptionEn: '',
-            category: 'outfit',
-            createdAt: new Date().toISOString(),
-            products: []
-          }
-        }
-      }),
-      socialMedia: {
-        instagram: "https://instagram.com/emmanuellek_",
-        tiktok: "https://tiktok.com/@emmanuellek_",
-        youtube: "https://youtube.com/@emmanuellek_",
-        pinterest: "https://pinterest.com/emmanuellek_"
-      }
+      })
     }
+
+    // Optimized query: select only needed fields
+    const outfits = await prisma.outfit.findMany({
+      where: { isPublished: true },
+      select: {
+        id: true,
+        title: true,
+        titleEn: true,
+        description: true,
+        descriptionEn: true,
+        imageUrl: true,
+        category: true,
+        createdAt: true,
+        products: {
+          select: {
+            id: true,
+            name: true,
+            brand: true,
+            price: true,
+            imageUrl: true,
+            affiliateLink: true,
+            x: true,
+            y: true
+          },
+          orderBy: { createdAt: 'asc' }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    })
+
+    // Optimized transformation - minimal object creation
+    const frontendData = {
+      ...STATIC_DATA,
+      outfits: outfits.map(outfit => ({
+        id: outfit.id,
+        title: outfit.title,
+        titleEn: outfit.titleEn || '',
+        image: outfit.imageUrl,
+        description: outfit.description || '',
+        descriptionEn: outfit.descriptionEn || '',
+        category: outfit.category,
+        createdAt: outfit.createdAt.toISOString(),
+        products: outfit.products.map(product => ({
+          id: product.id,
+          name: product.name,
+          brand: product.brand,
+          price: product.price || '',
+          imageUrl: product.imageUrl || '',
+          link: product.affiliateLink ? decodeHtmlEntities(product.affiliateLink) : '',
+          x: product.x,
+          y: product.y
+        }))
+      }))
+    }
+
+    // Cache the result for 60 seconds
+    cache.set(CACHE_KEYS.OUTFITS_EXPORT, frontendData, CACHE_TTL.EXPORT)
 
     return NextResponse.json(frontendData, {
       headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        ...CORS_HEADERS,
+        'X-Cache': 'MISS',
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
       }
     })
   } catch (error: any) {
-    console.error('Error exporting outfits:', error)
-    console.error('Error details:', {
-      message: error?.message || 'Unknown error',
-      stack: error?.stack,
-      name: error?.name,
-      code: error?.code
-    })
+    // Only log in development
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error exporting outfits:', error)
+    }
     
-    // Check if this is a database connection error
-    const isConnectionError = error?.message?.includes("Can't reach database server") || 
-                              error?.message?.includes('connect') ||
-                              error?.code === 'P1001' ||
+    const isConnectionError = error?.code === 'P1001' || 
                               error?.name === 'PrismaClientInitializationError'
-    
-    // More detailed error response for debugging
-    const errorMessage = error?.message || 'Unknown error occurred'
-    const errorCode = error?.code || 'UNKNOWN_ERROR'
     
     return NextResponse.json(
       { 
         error: isConnectionError ? 'Database connection failed' : 'Failed to export outfits',
-        message: errorMessage,
-        code: errorCode,
-        type: isConnectionError ? 'connection_error' : 'unknown_error',
-        ...(isConnectionError && {
-          troubleshooting: {
-            checkEnvironmentVariable: 'Verify DATABASE_URL is set correctly in Vercel environment variables',
-            checkSupabaseStatus: 'Check if your Supabase instance is running and accessible',
-            checkConnectionString: 'Verify the connection string format matches your Supabase setup',
-            directConnection: 'Consider using direct connection (port 5432) instead of pooler (port 6543) for Prisma operations',
-            healthCheck: 'Check /api/health/db endpoint for database connectivity status'
-          }
-        })
+        code: error?.code || 'UNKNOWN_ERROR'
       },
       { 
         status: isConnectionError ? 503 : 500,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        }
+        headers: CORS_HEADERS
       }
     )
   }

@@ -1,23 +1,55 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { cache, CACHE_KEYS, CACHE_TTL } from '@/lib/cache'
 
 export async function GET(request: NextRequest) {
   try {
+    // Check cache first
+    const cached = cache.get<any>(CACHE_KEYS.OUTFITS_LIST)
+    if (cached) {
+      return NextResponse.json(cached, {
+        headers: { 'X-Cache': 'HIT' }
+      })
+    }
+
+    // Optimized query with select
     const outfits = await prisma.outfit.findMany({
-      include: {
-        products: true
-        // Temporarily remove analytics to avoid relation issues
-        // analytics: {
-        //   orderBy: { date: 'desc' },
-        //   take: 1
-        // }
+      select: {
+        id: true,
+        title: true,
+        titleEn: true,
+        description: true,
+        descriptionEn: true,
+        imageUrl: true,
+        category: true,
+        isPublished: true,
+        createdAt: true,
+        products: {
+          select: {
+            id: true,
+            name: true,
+            brand: true,
+            price: true,
+            imageUrl: true,
+            affiliateLink: true,
+            x: true,
+            y: true
+          }
+        }
       },
       orderBy: { createdAt: 'desc' }
     })
 
-    return NextResponse.json({ outfits })
+    const result = { outfits }
+    cache.set(CACHE_KEYS.OUTFITS_LIST, result, CACHE_TTL.MEDIUM)
+
+    return NextResponse.json(result, {
+      headers: { 'X-Cache': 'MISS' }
+    })
   } catch (error) {
-    console.error('Error fetching outfits:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error fetching outfits:', error)
+    }
     return NextResponse.json(
       { error: 'Failed to fetch outfits' },
       { status: 500 }
@@ -62,9 +94,15 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    // Invalidate cache after creating new outfit
+    cache.delete(CACHE_KEYS.OUTFITS_LIST)
+    cache.delete(CACHE_KEYS.OUTFITS_EXPORT)
+
     return NextResponse.json({ outfit }, { status: 201 })
   } catch (error) {
-    console.error('Error creating outfit:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error creating outfit:', error)
+    }
     return NextResponse.json(
       { error: 'Failed to create outfit' },
       { status: 500 }

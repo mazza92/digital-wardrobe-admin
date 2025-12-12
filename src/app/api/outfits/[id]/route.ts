@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { cache, CACHE_KEYS } from '@/lib/cache'
 
 export async function GET(
   request: NextRequest,
@@ -81,9 +82,15 @@ export async function PUT(
       }
     })
 
+    // Invalidate cache after update
+    cache.delete(CACHE_KEYS.OUTFITS_LIST)
+    cache.delete(CACHE_KEYS.OUTFITS_EXPORT)
+
     return NextResponse.json({ outfit })
   } catch (error) {
-    console.error('Error updating outfit:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error updating outfit:', error)
+    }
     return NextResponse.json(
       { error: 'Failed to update outfit' },
       { status: 500 }
@@ -101,9 +108,15 @@ export async function DELETE(
       where: { id }
     })
 
+    // Invalidate cache after delete
+    cache.delete(CACHE_KEYS.OUTFITS_LIST)
+    cache.delete(CACHE_KEYS.OUTFITS_EXPORT)
+
     return NextResponse.json({ message: 'Outfit deleted successfully' })
   } catch (error) {
-    console.error('Error deleting outfit:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error deleting outfit:', error)
+    }
     return NextResponse.json(
       { error: 'Failed to delete outfit' },
       { status: 500 }

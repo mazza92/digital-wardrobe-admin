@@ -37,6 +37,10 @@ model Outfit {
   products    Product[]
   analytics   OutfitAnalytics[]
   
+  // Performance indexes for common queries
+  @@index([isPublished, createdAt(sort: Desc)]) // For export query
+  @@index([category])                           // For category filtering
+  @@index([createdAt(sort: Desc)])              // For sorting
   @@map("outfits")
 }
 
@@ -58,6 +62,10 @@ model Product {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
+  // Performance indexes
+  @@index([outfitId])               // Foreign key lookup
+  @@index([brand])                  // Brand filtering
+  @@index([outfitId, createdAt])    // Outfit products sorted by date
   @@map("products")
 }
 
