@@ -62,6 +62,7 @@ export async function GET() {
           return {
             id: outfit.id || '',
             title: outfit.title || '',
+            titleEn: outfit.titleEn || '',
             image: outfit.imageUrl || '',
             description: outfit.description || '',
             descriptionEn: outfit.descriptionEn || '',
@@ -99,6 +100,7 @@ export async function GET() {
           return {
             id: outfit.id || '',
             title: outfit.title || '',
+            titleEn: '',
             image: outfit.imageUrl || '',
             description: '',
             descriptionEn: '',

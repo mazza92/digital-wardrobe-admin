@@ -25,6 +25,7 @@ model User {
 model Outfit {
   id            String   @id @default(cuid())
   title         String
+  titleEn       String?   // English translation of title
   description   String?
   descriptionEn String?   // English translation of description
   imageUrl      String

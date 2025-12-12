@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { title, description, descriptionEn, imageUrl, category, isPublished, products } = await request.json()
+    const { title, titleEn, description, descriptionEn, imageUrl, category, isPublished, products } = await request.json()
 
     if (!title || !imageUrl) {
       return NextResponse.json(
@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
     const outfit = await prisma.outfit.create({
       data: {
         title,
+        titleEn,
         description,
         descriptionEn,
         imageUrl,

@@ -42,7 +42,7 @@ export async function PUT(
   try {
     const { id } = await params
     const updateData = await request.json()
-    const { title, description, descriptionEn, imageUrl, category, isPublished, products } = updateData
+    const { title, titleEn, description, descriptionEn, imageUrl, category, isPublished, products } = updateData
     
     console.log('Updating outfit:', { id, ...updateData })
 
@@ -50,6 +50,7 @@ export async function PUT(
     const outfitUpdateData: any = {}
     
     if (title !== undefined) outfitUpdateData.title = title
+    if (titleEn !== undefined) outfitUpdateData.titleEn = titleEn
     if (description !== undefined) outfitUpdateData.description = description
     if (descriptionEn !== undefined) outfitUpdateData.descriptionEn = descriptionEn
     if (imageUrl !== undefined) outfitUpdateData.imageUrl = imageUrl

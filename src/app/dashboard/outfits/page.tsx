@@ -27,6 +27,7 @@ import ProductSearch from '../../../components/ProductSearch'
 interface Outfit {
   id: string
   title: string
+  titleEn?: string
   description?: string
   descriptionEn?: string
   imageUrl: string
@@ -54,12 +55,14 @@ export default function OutfitsPage() {
   const [editingOutfit, setEditingOutfit] = useState<Outfit | null>(null)
   const [newOutfit, setNewOutfit] = useState({
     title: '',
+    titleEn: '',
     description: '',
     descriptionEn: '',
     imageUrl: '',
     category: 'outfit'
   })
   const [isTranslating, setIsTranslating] = useState(false)
+  const [isTranslatingTitle, setIsTranslatingTitle] = useState(false)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [tags, setTags] = useState<Omit<Product, 'id'>[]>([])
   const [showTagModal, setShowTagModal] = useState(false)
@@ -218,6 +221,46 @@ export default function OutfitsPage() {
   useEffect(() => {
     fetchOutfits()
   }, [])
+
+  // Auto-translate title from French to English
+  useEffect(() => {
+    // Only translate if title has content and is not empty
+    if (!newOutfit.title || newOutfit.title.trim().length === 0) {
+      setNewOutfit(prev => ({ ...prev, titleEn: '' }))
+      return
+    }
+
+    // Debounce translation to avoid too many API calls
+    const timeoutId = setTimeout(async () => {
+      setIsTranslatingTitle(true)
+      try {
+        const response = await fetch('/api/translate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            text: newOutfit.title,
+            from: 'fr',
+            to: 'en'
+          })
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          setNewOutfit(prev => ({ ...prev, titleEn: data.translatedText || '' }))
+        } else {
+          console.error('Translation failed:', await response.text())
+        }
+      } catch (error) {
+        console.error('Translation error:', error)
+      } finally {
+        setIsTranslatingTitle(false)
+      }
+    }, 800) // Wait 800ms after user stops typing
+
+    return () => clearTimeout(timeoutId)
+  }, [newOutfit.title])
 
   // Auto-translate description from French to English
   useEffect(() => {
@@ -757,6 +800,7 @@ export default function OutfitsPage() {
         // Update existing outfit
         const updateData = {
           title: newOutfit.title,
+          titleEn: newOutfit.titleEn,
           description: newOutfit.description,
           descriptionEn: newOutfit.descriptionEn,
           imageUrl: selectedImage,
@@ -779,7 +823,7 @@ export default function OutfitsPage() {
           await fetchOutfits()
           setEditingOutfit(null)
           // Reset form and close modal only on success
-          setNewOutfit({ title: '', description: '', descriptionEn: '', imageUrl: '', category: 'outfit' })
+          setNewOutfit({ title: '', titleEn: '', description: '', descriptionEn: '', imageUrl: '', category: 'outfit' })
           setSelectedImage(null)
           setTags([])
           clearDraft()
@@ -798,6 +842,7 @@ export default function OutfitsPage() {
           },
           body: JSON.stringify({
             title: newOutfit.title,
+            titleEn: newOutfit.titleEn,
             description: newOutfit.description,
             descriptionEn: newOutfit.descriptionEn,
             imageUrl: selectedImage,
@@ -811,7 +856,7 @@ export default function OutfitsPage() {
           // Refresh the outfits list
           await fetchOutfits()
           // Reset form and close modal only on success
-          setNewOutfit({ title: '', description: '', descriptionEn: '', imageUrl: '', category: 'outfit' })
+          setNewOutfit({ title: '', titleEn: '', description: '', descriptionEn: '', imageUrl: '', category: 'outfit' })
           setSelectedImage(null)
           setTags([])
           clearDraft()
@@ -835,6 +880,7 @@ export default function OutfitsPage() {
     setEditingOutfit(outfit)
     const outfitData = {
       title: outfit.title,
+      titleEn: outfit.titleEn || '',
       description: outfit.description || '',
       descriptionEn: outfit.descriptionEn || '',
       imageUrl: outfit.imageUrl,
@@ -1397,7 +1443,7 @@ export default function OutfitsPage() {
                   saveDraft() // Auto-save before closing
                   setShowAddModal(false)
                   setEditingOutfit(null)
-                  setNewOutfit({ title: '', description: '', descriptionEn: '', imageUrl: '', category: 'outfit' })
+                  setNewOutfit({ title: '', titleEn: '', description: '', descriptionEn: '', imageUrl: '', category: 'outfit' })
                   setSelectedImage(null)
                   setTags([])
                 }}
@@ -1419,6 +1465,23 @@ export default function OutfitsPage() {
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-base"
                   placeholder="ex: Look Robe d'Été"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  Titre (English) {isTranslatingTitle && <span className="text-xs text-gray-500 font-normal">(Translating...)</span>}
+                </label>
+                <input
+                  type="text"
+                  value={newOutfit.titleEn}
+                  onChange={(e) => setNewOutfit(prev => ({ ...prev, titleEn: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-base"
+                  placeholder="English translation will appear here automatically..."
+                  disabled={isTranslatingTitle}
+                />
+                <p className="text-xs text-gray-500 mt-2">
+                  Auto-translated from French. You can edit this if needed.
+                </p>
               </div>
 
               <div>
@@ -1609,7 +1672,7 @@ export default function OutfitsPage() {
                   onClick={() => {
                     setShowAddModal(false)
                     setEditingOutfit(null)
-                    setNewOutfit({ title: '', description: '', descriptionEn: '', imageUrl: '', category: 'outfit' })
+                    setNewOutfit({ title: '', titleEn: '', description: '', descriptionEn: '', imageUrl: '', category: 'outfit' })
                     setSelectedImage(null)
                     setTags([])
                   }}
