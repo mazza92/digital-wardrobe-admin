@@ -93,17 +93,76 @@ export async function PUT(
       internalNote
     } = body
 
+    // Get current order to check status transitions
+    const currentOrder = await db.order.findUnique({
+      where: { id },
+      include: { items: true }
+    })
+
+    if (!currentOrder) {
+      return NextResponse.json(
+        { error: 'Order not found' },
+        { status: 404, headers: CORS_HEADERS }
+      )
+    }
+
     const updateData: any = {}
 
-    if (status !== undefined) {
+    if (status !== undefined && status !== currentOrder.status) {
+      // Validate status transition
+      const validTransitions: Record<string, string[]> = {
+        PENDING: ['PAID', 'CANCELLED'],
+        PAID: ['PROCESSING', 'CANCELLED', 'REFUNDED'],
+        PROCESSING: ['SHIPPED', 'CANCELLED'],
+        SHIPPED: ['DELIVERED', 'CANCELLED'],
+        DELIVERED: ['REFUNDED'],
+        CANCELLED: [],
+        REFUNDED: []
+      }
+
+      if (!validTransitions[currentOrder.status]?.includes(status)) {
+        return NextResponse.json(
+          { error: `Cannot transition from ${currentOrder.status} to ${status}` },
+          { status: 400, headers: CORS_HEADERS }
+        )
+      }
+
       updateData.status = status
       
       // Set timestamps based on status
+      if (status === 'PAID' && !currentOrder.paidAt) {
+        updateData.paidAt = new Date()
+      }
       if (status === 'SHIPPED' && !body.shippedAt) {
         updateData.shippedAt = new Date()
       }
       if (status === 'DELIVERED' && !body.deliveredAt) {
         updateData.deliveredAt = new Date()
+      }
+
+      // Handle stock restoration on cancellation
+      if (status === 'CANCELLED') {
+        // Only restore stock if the order was paid (stock was decremented)
+        if (['PAID', 'PROCESSING', 'SHIPPED'].includes(currentOrder.status)) {
+          for (const item of currentOrder.items) {
+            await db.shopProduct.update({
+              where: { id: item.productId },
+              data: {
+                stock: {
+                  increment: item.quantity
+                }
+              }
+            })
+          }
+          console.log(`Stock restored for cancelled order ${currentOrder.orderNumber}`)
+        }
+      }
+
+      // Handle refund (stock was already decremented, don't restore for refunds)
+      if (status === 'REFUNDED') {
+        // TODO: Trigger Stripe refund here if needed
+        // For now, just log it
+        console.log(`Order ${currentOrder.orderNumber} marked as refunded`)
       }
     }
 
@@ -116,20 +175,60 @@ export async function PUT(
     }
 
     if (internalNote !== undefined) {
-      updateData.internalNote = internalNote
+      // Append to existing note with timestamp
+      const timestamp = new Date().toLocaleString('fr-FR')
+      const newNote = internalNote 
+        ? `[${timestamp}] ${internalNote}`
+        : ''
+      
+      if (currentOrder.internalNote && internalNote) {
+        updateData.internalNote = `${currentOrder.internalNote}\n${newNote}`
+      } else if (internalNote) {
+        updateData.internalNote = newNote
+      } else {
+        updateData.internalNote = internalNote
+      }
     }
 
     const order = await db.order.update({
       where: { id },
       data: updateData,
       include: {
-        items: true
+        items: {
+          include: {
+            product: {
+              select: {
+                id: true,
+                name: true,
+                imageUrl: true
+              }
+            }
+          }
+        }
       }
     })
 
-    // TODO: Send status update email to customer
+    // Format response
+    const formattedOrder = {
+      ...order,
+      createdAt: order.createdAt.toISOString(),
+      updatedAt: order.updatedAt.toISOString(),
+      paidAt: order.paidAt?.toISOString() || null,
+      shippedAt: order.shippedAt?.toISOString() || null,
+      deliveredAt: order.deliveredAt?.toISOString() || null,
+      items: order.items.map((item: any) => ({
+        ...item,
+        createdAt: item.createdAt.toISOString()
+      }))
+    }
 
-    return NextResponse.json({ order }, { headers: CORS_HEADERS })
+    // TODO: Send status update email to customer based on new status
+    // - SHIPPED: Send shipping notification with tracking
+    // - DELIVERED: Send delivery confirmation
+    // - CANCELLED: Send cancellation notification
+    // - REFUNDED: Send refund confirmation
+
+    return NextResponse.json({ order: formattedOrder }, { headers: CORS_HEADERS })
   } catch (error: any) {
     console.error('Error updating order:', error)
     
@@ -146,4 +245,3 @@ export async function PUT(
     )
   }
 }
-
