@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { title, description, imageUrl, category, isPublished, products } = await request.json()
+    const { title, description, descriptionEn, imageUrl, category, isPublished, products } = await request.json()
 
     if (!title || !imageUrl) {
       return NextResponse.json(
@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
       data: {
         title,
         description,
+        descriptionEn,
         imageUrl,
         category: category || 'outfit', // Default to 'outfit' if not provided
         isPublished: isPublished !== undefined ? isPublished : true, // Default to published

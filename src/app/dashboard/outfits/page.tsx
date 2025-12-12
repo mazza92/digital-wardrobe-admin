@@ -28,6 +28,7 @@ interface Outfit {
   id: string
   title: string
   description?: string
+  descriptionEn?: string
   imageUrl: string
   category: string
   isPublished: boolean
@@ -54,9 +55,11 @@ export default function OutfitsPage() {
   const [newOutfit, setNewOutfit] = useState({
     title: '',
     description: '',
+    descriptionEn: '',
     imageUrl: '',
     category: 'outfit'
   })
+  const [isTranslating, setIsTranslating] = useState(false)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [tags, setTags] = useState<Omit<Product, 'id'>[]>([])
   const [showTagModal, setShowTagModal] = useState(false)
@@ -215,6 +218,46 @@ export default function OutfitsPage() {
   useEffect(() => {
     fetchOutfits()
   }, [])
+
+  // Auto-translate description from French to English
+  useEffect(() => {
+    // Only translate if description has content and is not empty
+    if (!newOutfit.description || newOutfit.description.trim().length === 0) {
+      setNewOutfit(prev => ({ ...prev, descriptionEn: '' }))
+      return
+    }
+
+    // Debounce translation to avoid too many API calls
+    const timeoutId = setTimeout(async () => {
+      setIsTranslating(true)
+      try {
+        const response = await fetch('/api/translate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            text: newOutfit.description,
+            from: 'fr',
+            to: 'en'
+          })
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          setNewOutfit(prev => ({ ...prev, descriptionEn: data.translatedText || '' }))
+        } else {
+          console.error('Translation failed:', await response.text())
+        }
+      } catch (error) {
+        console.error('Translation error:', error)
+      } finally {
+        setIsTranslating(false)
+      }
+    }, 800) // Wait 800ms after user stops typing
+
+    return () => clearTimeout(timeoutId)
+  }, [newOutfit.description])
 
   // Infinite scroll effect
   useEffect(() => {
@@ -715,6 +758,7 @@ export default function OutfitsPage() {
         const updateData = {
           title: newOutfit.title,
           description: newOutfit.description,
+          descriptionEn: newOutfit.descriptionEn,
           imageUrl: selectedImage,
           category: newOutfit.category,
           isPublished: editingOutfit.isPublished,
@@ -735,7 +779,7 @@ export default function OutfitsPage() {
           await fetchOutfits()
           setEditingOutfit(null)
           // Reset form and close modal only on success
-          setNewOutfit({ title: '', description: '', imageUrl: '', category: 'outfit' })
+          setNewOutfit({ title: '', description: '', descriptionEn: '', imageUrl: '', category: 'outfit' })
           setSelectedImage(null)
           setTags([])
           clearDraft()
@@ -755,6 +799,7 @@ export default function OutfitsPage() {
           body: JSON.stringify({
             title: newOutfit.title,
             description: newOutfit.description,
+            descriptionEn: newOutfit.descriptionEn,
             imageUrl: selectedImage,
             category: newOutfit.category,
             isPublished: true, // Auto-publish new outfits
@@ -766,7 +811,7 @@ export default function OutfitsPage() {
           // Refresh the outfits list
           await fetchOutfits()
           // Reset form and close modal only on success
-          setNewOutfit({ title: '', description: '', imageUrl: '', category: 'outfit' })
+          setNewOutfit({ title: '', description: '', descriptionEn: '', imageUrl: '', category: 'outfit' })
           setSelectedImage(null)
           setTags([])
           clearDraft()
@@ -791,6 +836,7 @@ export default function OutfitsPage() {
     const outfitData = {
       title: outfit.title,
       description: outfit.description || '',
+      descriptionEn: outfit.descriptionEn || '',
       imageUrl: outfit.imageUrl,
       category: outfit.category || 'outfit'
     }
@@ -1351,7 +1397,7 @@ export default function OutfitsPage() {
                   saveDraft() // Auto-save before closing
                   setShowAddModal(false)
                   setEditingOutfit(null)
-                  setNewOutfit({ title: '', description: '', imageUrl: '', category: 'outfit' })
+                  setNewOutfit({ title: '', description: '', descriptionEn: '', imageUrl: '', category: 'outfit' })
                   setSelectedImage(null)
                   setTags([])
                 }}
@@ -1400,6 +1446,23 @@ export default function OutfitsPage() {
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-base resize-none"
                   placeholder="Décrivez votre look..."
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  Description (English) {isTranslating && <span className="text-xs text-gray-500 font-normal">(Translating...)</span>}
+                </label>
+                <textarea
+                  value={newOutfit.descriptionEn}
+                  onChange={(e) => setNewOutfit(prev => ({ ...prev, descriptionEn: e.target.value }))}
+                  rows={3}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-base resize-none"
+                  placeholder="English translation will appear here automatically..."
+                  disabled={isTranslating}
+                />
+                <p className="text-xs text-gray-500 mt-2">
+                  Auto-translated from French. You can edit this if needed.
+                </p>
               </div>
 
 
@@ -1546,7 +1609,7 @@ export default function OutfitsPage() {
                   onClick={() => {
                     setShowAddModal(false)
                     setEditingOutfit(null)
-                    setNewOutfit({ title: '', description: '', imageUrl: '', category: 'outfit' })
+                    setNewOutfit({ title: '', description: '', descriptionEn: '', imageUrl: '', category: 'outfit' })
                     setSelectedImage(null)
                     setTags([])
                   }}

@@ -23,14 +23,15 @@ model User {
 }
 
 model Outfit {
-  id          String   @id @default(cuid())
-  title       String
-  description String?
-  imageUrl    String
-  category    String   @default("outfit") // "outfit" or "wishlist"
-  isPublished Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  title         String
+  description   String?
+  descriptionEn String?   // English translation of description
+  imageUrl      String
+  category      String   @default("outfit") // "outfit" or "wishlist"
+  isPublished   Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
   
   products    Product[]
   analytics   OutfitAnalytics[]
