@@ -334,7 +334,7 @@ function parseCSVFeed(csvText: string, brandName: string = 'Unknown') {
           
           products.push(product)
           if (products.length <= 5) {
-            console.log('✅ Added product:', product.name, product.price, 'Image URL:', product.imageUrl || 'NO IMAGE', 'Original:', imageLink)
+            console.log('✅ Added product:', product.name, product.price, 'Image URL:', product.imageUrl || 'NO IMAGE', 'Original:', imageLink, 'Valid:', isValidImageUrl(imageLink))
           }
         } else {
           if (i <= 5) {
