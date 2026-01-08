@@ -172,17 +172,18 @@ function parseCSVFeed(csvText: string, brandName: string = 'Unknown') {
     
     // Handle different line endings (Windows \r\n, Unix \n, Mac \r)
     let normalizedText = csvText.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
-    const lines = normalizedText.split('\n').filter(line => line.trim())
     
-    if (lines.length < 2) {
-      console.warn('CSV feed has less than 2 lines (header + data)')
+    // Parse CSV properly handling quoted fields with newlines
+    const rows = parseCSVRows(normalizedText)
+    
+    if (rows.length < 2) {
+      console.warn('CSV feed has less than 2 rows (header + data)')
       console.warn('First 200 chars:', csvText.substring(0, 200))
       return []
     }
     
     // Parse header row
-    const headerLine = lines[0]
-    const headers = parseCSVLine(headerLine)
+    const headers = rows[0]
     console.log('CSV headers:', headers)
     console.log('Header count:', headers.length)
     
@@ -217,12 +218,12 @@ function parseCSVFeed(csvText: string, brandName: string = 'Unknown') {
       'sale_price', 'final_price', 'current_price', 'discounted_price',
       'prix soldes', 'prix final', 'prix reduit', 'prix actuel', 'prix promo'
     ])
-    const priceIndex = salePriceIndex !== -1 
-      ? salePriceIndex 
-      : getColumnIndex([
-          'price', 'cost', 'item_price', 'product_price',
-          'prix', 'prix produit', 'prix normal'
-        ])
+    const regularPriceIndex = getColumnIndex([
+      'price', 'cost', 'item_price', 'product_price',
+      'prix', 'prix produit', 'prix normal'
+    ])
+    // Use sale price if available, otherwise use regular price
+    const priceIndex = salePriceIndex !== -1 ? salePriceIndex : regularPriceIndex
     const brandIndex = getColumnIndex([
       'brand', 'manufacturer', 'vendor', 'brand_name',
       'marque', 'fabricant', 'marque produit'
@@ -251,7 +252,7 @@ function parseCSVFeed(csvText: string, brandName: string = 'Unknown') {
     if (titleIndex === -1 || priceIndex === -1) {
       console.error('CSV feed missing required columns (title or price)')
       console.error('Available headers:', headers)
-      console.error('First data row sample:', lines.length > 1 ? parseCSVLine(lines[1]) : 'No data rows')
+      console.error('First data row sample:', rows.length > 1 ? rows[1] : 'No data rows')
       return []
     }
     
@@ -259,20 +260,30 @@ function parseCSVFeed(csvText: string, brandName: string = 'Unknown') {
     
     // Parse data rows
     let skippedCount = 0
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i]
-      if (!line.trim()) continue
+    for (let i = 1; i < rows.length; i++) {
+      const values = rows[i]
+      
+      // Skip empty rows
+      if (!values || values.length === 0 || values.every(v => !v || !v.trim())) {
+        continue
+      }
       
       try {
-        const values = parseCSVLine(line)
-        
-        // Ensure we have enough values
-        if (values.length < Math.max(titleIndex, priceIndex) + 1) {
-          if (i <= 3) {
-            console.warn(`Row ${i} has insufficient columns: expected at least ${Math.max(titleIndex, priceIndex) + 1}, got ${values.length}`)
+        // Ensure we have enough values (but be flexible - some columns might be empty at the end)
+        const minRequiredColumns = Math.max(titleIndex, priceIndex) + 1
+        if (values.length < minRequiredColumns) {
+          // Try to pad with empty strings if we're close
+          if (values.length >= minRequiredColumns - 5) {
+            while (values.length < minRequiredColumns) {
+              values.push('')
+            }
+          } else {
+            if (i <= 3) {
+              console.warn(`Row ${i} has insufficient columns: expected at least ${minRequiredColumns}, got ${values.length}`)
+            }
+            skippedCount++
+            continue
           }
-          skippedCount++
-          continue
         }
         
         const title = values[titleIndex]?.trim()
@@ -337,7 +348,63 @@ function parseCSVFeed(csvText: string, brandName: string = 'Unknown') {
   }
 }
 
-// Helper function to parse CSV line (handles quoted fields with commas)
+// Helper function to parse entire CSV text into rows (handles newlines inside quoted fields)
+function parseCSVRows(csvText: string): string[][] {
+  const rows: string[][] = []
+  let currentRow: string[] = []
+  let currentField = ''
+  let inQuotes = false
+  
+  for (let i = 0; i < csvText.length; i++) {
+    const char = csvText[i]
+    const nextChar = csvText[i + 1]
+    const prevChar = csvText[i - 1]
+    
+    if (char === '"') {
+      if (inQuotes && nextChar === '"') {
+        // Escaped quote (double quote)
+        currentField += '"'
+        i++ // Skip next quote
+      } else {
+        // Toggle quote state
+        inQuotes = !inQuotes
+      }
+    } else if (char === ',' && !inQuotes) {
+      // Field separator
+      currentRow.push(currentField)
+      currentField = ''
+    } else if ((char === '\n' || char === '\r') && !inQuotes) {
+      // Row separator (only if not inside quotes)
+      if (currentField || currentRow.length > 0) {
+        currentRow.push(currentField)
+        if (currentRow.some(field => field.trim())) {
+          // Only add non-empty rows
+          rows.push(currentRow)
+        }
+        currentRow = []
+        currentField = ''
+      }
+      // Skip \r if followed by \n
+      if (char === '\r' && nextChar === '\n') {
+        i++
+      }
+    } else {
+      currentField += char
+    }
+  }
+  
+  // Add last field and row if any
+  if (currentField || currentRow.length > 0) {
+    currentRow.push(currentField)
+    if (currentRow.some(field => field.trim())) {
+      rows.push(currentRow)
+    }
+  }
+  
+  return rows
+}
+
+// Helper function to parse CSV line (handles quoted fields with commas) - kept for backward compatibility
 function parseCSVLine(line: string): string[] {
   const result: string[] = []
   let current = ''
