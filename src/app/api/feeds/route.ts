@@ -6,6 +6,31 @@ const FEED_CONFIGS = {
   'soeur': {
     name: 'Soeur Paris',
     url: 'https://feeds.affilae.com/api/feed/affilae/builder?url=https%3A%2F%2Ffeeds.datafeedwatch.com%2F66764%2F8e9cf0a4dca85b9b7e745af1ab4c6cd50c717124.xml&partnershipId=61a73bf6ae143319c822a8d4&encoding=UTF-8&separator=none&format=xml',
+    format: 'xml',
+    enabled: true
+  },
+  'simone-perele': {
+    name: 'Simone Pérèle',
+    url: 'https://feeds.affilae.com/api/feed/affilae/builder?url=https%3A%2F%2Fstorage.googleapis.com%2Fsmart-feeds-data-export-http%2F5130660558143488.csv&partnershipId=6939731e0ebc3c1b9b82f4bb&encoding=UTF-8&separator=,&format=csv',
+    format: 'csv',
+    enabled: true
+  },
+  'princesse-tam-tam': {
+    name: 'Princesse tam tam',
+    url: 'https://feeds.affilae.com/api/feed/affilae/builder?url=https%3A%2F%2Ffiles.channable.com%2FN6XT41EeNhRJ0qXB_1Zvpw%3D%3D.csv&partnershipId=6939738915a92c7b66d74a1f&encoding=UTF-8&separator=,&format=csv',
+    format: 'csv',
+    enabled: true
+  },
+  'noo-influence': {
+    name: 'NOO INFLUENCE',
+    url: 'https://feeds.affilae.com/api/feed/affilae/builder?url=https%3A%2F%2Ffiles.channable.com%2FlJvv2yV202kjgl5cX6_3JQ%3D%3D.csv&partnershipId=6939748415a92c7b66d74a24&encoding=UTF-8&separator=,&format=csv',
+    format: 'csv',
+    enabled: true
+  },
+  'bonsoirs': {
+    name: 'Bonsoirs',
+    url: 'https://feeds.affilae.com/api/feed/affilae/builder?url=https%3A%2F%2Ffiles.channable.com%2FtfxMW9w9v_3sP6PNPSPybA%3D%3D.xml&partnershipId=6939750415a92c7b66d74a26&encoding=UTF-8&separator=none&format=xml',
+    format: 'xml',
     enabled: true
   }
 }
@@ -19,16 +44,21 @@ export async function GET(request: NextRequest) {
     if (brand && FEED_CONFIGS[brand]) {
       const feedConfig = FEED_CONFIGS[brand]
       
-      // Fetch and parse the XML feed
+      // Fetch and parse the feed (XML or CSV)
       console.log('Fetching feed from:', feedConfig.url)
       const response = await fetch(feedConfig.url)
       if (!response.ok) {
         throw new Error(`Failed to fetch feed: ${response.statusText}`)
       }
       
-      const xmlText = await response.text()
-      console.log('Feed fetched, length:', xmlText.length)
-      const products = parseXMLFeed(xmlText)
+      const feedText = await response.text()
+      console.log('Feed fetched, length:', feedText.length)
+      
+      // Detect format and parse accordingly
+      const feedFormat = feedConfig.format || (feedText.trim().startsWith('<?xml') || feedText.trim().startsWith('<rss') ? 'xml' : 'csv')
+      const products = feedFormat === 'xml' 
+        ? parseXMLFeed(feedText, feedConfig.name)
+        : parseCSVFeed(feedText, feedConfig.name)
       console.log('Products parsed:', products.length)
       
       // Filter and sort products if search term provided
@@ -82,7 +112,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-function parseXMLFeed(xmlText: string) {
+function parseXMLFeed(xmlText: string, brandName: string = 'Unknown') {
   try {
     console.log('Parsing XML feed, length:', xmlText.length)
     
@@ -96,14 +126,14 @@ function parseXMLFeed(xmlText: string) {
       const item = items[i]
       
       try {
-        // Extract data from XML tags
-        const id = extractXMLValue(item, 'g:id') || `soeur_${Date.now()}_${i}`
-        const title = extractXMLValue(item, 'g:title')
-        const description = extractXMLValue(item, 'g:description')
-        const link = extractXMLValue(item, 'g:link')
-        const imageLink = extractXMLValue(item, 'g:image_link')
-        const price = extractXMLValue(item, 'g:price')
-        const brand = extractXMLValue(item, 'g:brand') || 'Soeur'
+        // Extract data from XML tags (support both g: and standard tags)
+        const id = extractXMLValue(item, 'g:id') || extractXMLValue(item, 'id') || `${brandName.toLowerCase().replace(/\s+/g, '-')}_${Date.now()}_${i}`
+        const title = extractXMLValue(item, 'g:title') || extractXMLValue(item, 'title')
+        const description = extractXMLValue(item, 'g:description') || extractXMLValue(item, 'description')
+        const link = extractXMLValue(item, 'g:link') || extractXMLValue(item, 'link')
+        const imageLink = extractXMLValue(item, 'g:image_link') || extractXMLValue(item, 'image_link') || extractXMLValue(item, 'image')
+        const price = extractXMLValue(item, 'g:price') || extractXMLValue(item, 'price')
+        const brand = extractXMLValue(item, 'g:brand') || extractXMLValue(item, 'brand') || brandName
         
         if (title && price) {
           const product = {
@@ -111,7 +141,7 @@ function parseXMLFeed(xmlText: string) {
             name: title,
             brand: brand,
             price: price,
-            description: description || 'Beautiful product from Soeur',
+            description: description || `Beautiful product from ${brandName}`,
             imageUrl: isValidImageUrl(imageLink) ? imageLink : '',
             affiliateLink: link || '',
             category: extractCategoryFromTitle(title),
@@ -134,6 +164,147 @@ function parseXMLFeed(xmlText: string) {
     console.error('Error parsing XML feed:', error)
     return []
   }
+}
+
+function parseCSVFeed(csvText: string, brandName: string = 'Unknown') {
+  try {
+    console.log('Parsing CSV feed, length:', csvText.length)
+    
+    const lines = csvText.split('\n').filter(line => line.trim())
+    if (lines.length < 2) {
+      console.warn('CSV feed has less than 2 lines (header + data)')
+      return []
+    }
+    
+    // Parse header row
+    const headerLine = lines[0]
+    const headers = parseCSVLine(headerLine)
+    console.log('CSV headers:', headers)
+    
+    // Find column indices (case-insensitive)
+    const getColumnIndex = (possibleNames: string[]): number => {
+      for (const name of possibleNames) {
+        const index = headers.findIndex(h => h.toLowerCase() === name.toLowerCase())
+        if (index !== -1) return index
+      }
+      return -1
+    }
+    
+    const titleIndex = getColumnIndex(['title', 'name', 'product_name'])
+    const descriptionIndex = getColumnIndex(['description', 'desc'])
+    const imageIndex = getColumnIndex(['image_link', 'image', 'image_url', 'imageUrl'])
+    const linkIndex = getColumnIndex(['link', 'url', 'affiliate_link', 'product_url'])
+    const priceIndex = getColumnIndex(['price', 'sale_price', 'cost'])
+    const brandIndex = getColumnIndex(['brand', 'manufacturer'])
+    const idIndex = getColumnIndex(['id', 'product_id', 'sku', 'gtin'])
+    const availabilityIndex = getColumnIndex(['availability', 'stock_status', 'in_stock'])
+    
+    if (titleIndex === -1 || priceIndex === -1) {
+      console.error('CSV feed missing required columns (title or price)')
+      return []
+    }
+    
+    const products = []
+    
+    // Parse data rows
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i]
+      if (!line.trim()) continue
+      
+      try {
+        const values = parseCSVLine(line)
+        
+        const title = values[titleIndex]?.trim()
+        const price = values[priceIndex]?.trim()
+        const description = descriptionIndex !== -1 ? values[descriptionIndex]?.trim() : ''
+        const imageLink = imageIndex !== -1 ? values[imageIndex]?.trim() : ''
+        const link = linkIndex !== -1 ? values[linkIndex]?.trim() : ''
+        const brand = brandIndex !== -1 ? values[brandIndex]?.trim() : brandName
+        const id = idIndex !== -1 ? values[idIndex]?.trim() : `${brandName.toLowerCase().replace(/\s+/g, '-')}_${i}`
+        const availability = availabilityIndex !== -1 ? values[availabilityIndex]?.trim().toLowerCase() : 'in stock'
+        
+        if (title && price) {
+          // Clean price (remove currency symbols, spaces, etc.)
+          // Handle formats like "45.00 EUR", "22,50 EUR", "45 EUR", etc.
+          let cleanPrice = price.trim()
+          // Remove currency text (EUR, €, etc.)
+          cleanPrice = cleanPrice.replace(/\s*(EUR|€|USD|\$|GBP|£)\s*/gi, '')
+          // Replace comma with dot for decimal
+          cleanPrice = cleanPrice.replace(',', '.')
+          // Remove any remaining non-numeric characters except dot
+          cleanPrice = cleanPrice.replace(/[^\d.]/g, '')
+          // Ensure we have a valid number
+          if (!cleanPrice || isNaN(parseFloat(cleanPrice))) {
+            console.warn(`Invalid price format: ${price}, skipping product`)
+            continue
+          }
+          
+          const product = {
+            id: id,
+            name: title,
+            brand: brand || brandName,
+            price: cleanPrice,
+            description: description || `Beautiful product from ${brandName}`,
+            imageUrl: isValidImageUrl(imageLink) ? imageLink : '',
+            affiliateLink: link || '',
+            category: extractCategoryFromTitle(title),
+            availability: availability === 'in stock' || availability === 'available' ? 'in stock' : 'out of stock'
+          }
+          
+          products.push(product)
+          if (products.length <= 5) {
+            console.log('✅ Added product:', product.name, product.price, 'Image URL:', product.imageUrl)
+          }
+        } else {
+          if (i <= 5) {
+            console.log('❌ Skipped row - missing title or price:', { title, price, row: i })
+          }
+        }
+      } catch (parseError) {
+        console.warn(`Error parsing CSV row ${i}:`, parseError)
+      }
+    }
+    
+    console.log('Total products parsed:', products.length)
+    return products
+  } catch (error) {
+    console.error('Error parsing CSV feed:', error)
+    return []
+  }
+}
+
+// Helper function to parse CSV line (handles quoted fields with commas)
+function parseCSVLine(line: string): string[] {
+  const result: string[] = []
+  let current = ''
+  let inQuotes = false
+  
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i]
+    const nextChar = line[i + 1]
+    
+    if (char === '"') {
+      if (inQuotes && nextChar === '"') {
+        // Escaped quote
+        current += '"'
+        i++ // Skip next quote
+      } else {
+        // Toggle quote state
+        inQuotes = !inQuotes
+      }
+    } else if (char === ',' && !inQuotes) {
+      // Field separator
+      result.push(current)
+      current = ''
+    } else {
+      current += char
+    }
+  }
+  
+  // Add last field
+  result.push(current)
+  
+  return result
 }
 
 function extractXMLValue(xml: string, tag: string): string {

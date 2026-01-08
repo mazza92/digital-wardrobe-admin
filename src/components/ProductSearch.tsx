@@ -26,6 +26,7 @@ export default function ProductSearch({ onSelectProduct, onClose, isOpen }: Prod
   const [products, setProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [selectedBrand, setSelectedBrand] = useState('soeur')
+  const [availableBrands, setAvailableBrands] = useState<Array<{id: string, name: string}>>([])
   const searchRef = useRef<HTMLDivElement>(null)
 
   // Global error handler to prevent image loading cascades
@@ -49,8 +50,25 @@ export default function ProductSearch({ onSelectProduct, onClose, isOpen }: Prod
     if (isOpen) {
       setSearchTerm('')
       setProducts([])
+      // Fetch available brands
+      fetch('/api/feeds')
+        .then(res => res.json())
+        .then(data => {
+          if (data.feeds) {
+            setAvailableBrands(data.feeds)
+          }
+        })
+        .catch(err => console.error('Error fetching brands:', err))
     }
   }, [isOpen])
+
+  // Re-search when brand changes and there's a search term
+  useEffect(() => {
+    if (isOpen && searchTerm.trim()) {
+      searchProducts(searchTerm)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedBrand])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -124,6 +142,29 @@ export default function ProductSearch({ onSelectProduct, onClose, isOpen }: Prod
               <X className="h-5 w-5" />
             </button>
           </div>
+          
+          {/* Brand Selector */}
+          {availableBrands.length > 0 && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Marque
+              </label>
+              <select
+                value={selectedBrand}
+                onChange={(e) => {
+                  setSelectedBrand(e.target.value)
+                  setProducts([])
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+              >
+                {availableBrands.map((brand) => (
+                  <option key={brand.id} value={brand.id}>
+                    {brand.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           
           {/* Search Input */}
           <div className="relative">
