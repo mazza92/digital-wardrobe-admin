@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Search, X, ExternalLink } from 'lucide-react'
+import Image from 'next/image'
 
 interface Product {
   id: string
@@ -97,7 +98,16 @@ export default function ProductSearch({ onSelectProduct, onClose, isOpen }: Prod
       const response = await fetch(`/api/feeds?brand=${selectedBrand}&search=${encodeURIComponent(term)}`)
       if (response.ok) {
         const data = await response.json()
-        setProducts(data.products || [])
+        const products = data.products || []
+        // Debug: log first product to check image URL
+        if (products.length > 0) {
+          console.log('First product sample:', {
+            name: products[0].name,
+            imageUrl: products[0].imageUrl,
+            hasImage: !!products[0].imageUrl
+          })
+        }
+        setProducts(products)
       }
     } catch (error) {
       console.error('Error searching products:', error)
@@ -196,34 +206,21 @@ export default function ProductSearch({ onSelectProduct, onClose, isOpen }: Prod
                   className="border border-gray-200 rounded-lg p-4 hover:border-black hover:shadow-md transition-all cursor-pointer"
                 >
                   <div className="flex gap-4">
-                    <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                      {product.imageUrl && product.imageUrl.startsWith('https://') ? (
-                        <div className="relative w-full h-full">
-                          <img
+                    <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 relative">
+                      {product.imageUrl && product.imageUrl.trim() ? (
+                        <>
+                          <Image
                             src={product.imageUrl}
                             alt={product.name}
-                            className="w-full h-full object-cover"
-                            crossOrigin="anonymous"
-                            loading="lazy"
-                            onLoad={() => {}}
-                            onError={(e) => {
-                              try {
-                                const target = e.target as HTMLImageElement
-                                target.style.display = 'none'
-                                // Show a simple text placeholder instead of base64 image
-                                const placeholder = target.parentElement?.querySelector('.image-placeholder')
-                                if (placeholder) {
-                                  (placeholder as HTMLElement).style.display = 'flex'
-                                }
-                              } catch (error) {
-                                // Silently handle any errors in error handling
-                              }
+                            fill
+                            className="object-cover"
+                            sizes="64px"
+                            unoptimized={product.imageUrl.includes('princessetamtam.com') || product.imageUrl.includes('princesse-tam-tam')}
+                            onError={() => {
+                              console.warn('Image failed to load:', product.imageUrl)
                             }}
                           />
-                          <div className="image-placeholder absolute inset-0 w-full h-full flex items-center justify-center bg-gray-100" style={{display: 'none'}}>
-                            <span className="text-xs text-gray-500">No Image</span>
-                          </div>
-                        </div>
+                        </>
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gray-100">
                           <span className="text-xs text-gray-500">No Image</span>
