@@ -170,9 +170,13 @@ function parseCSVFeed(csvText: string, brandName: string = 'Unknown') {
   try {
     console.log('Parsing CSV feed, length:', csvText.length)
     
-    const lines = csvText.split('\n').filter(line => line.trim())
+    // Handle different line endings (Windows \r\n, Unix \n, Mac \r)
+    let normalizedText = csvText.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+    const lines = normalizedText.split('\n').filter(line => line.trim())
+    
     if (lines.length < 2) {
       console.warn('CSV feed has less than 2 lines (header + data)')
+      console.warn('First 200 chars:', csvText.substring(0, 200))
       return []
     }
     
@@ -180,6 +184,7 @@ function parseCSVFeed(csvText: string, brandName: string = 'Unknown') {
     const headerLine = lines[0]
     const headers = parseCSVLine(headerLine)
     console.log('CSV headers:', headers)
+    console.log('Header count:', headers.length)
     
     // Find column indices (case-insensitive)
     const getColumnIndex = (possibleNames: string[]): number => {
@@ -190,29 +195,52 @@ function parseCSVFeed(csvText: string, brandName: string = 'Unknown') {
       return -1
     }
     
-    const titleIndex = getColumnIndex(['title', 'name', 'product_name'])
-    const descriptionIndex = getColumnIndex(['description', 'desc'])
-    const imageIndex = getColumnIndex(['image_link', 'image', 'image_url', 'imageUrl'])
-    const linkIndex = getColumnIndex(['link', 'url', 'affiliate_link', 'product_url'])
-    const priceIndex = getColumnIndex(['price', 'sale_price', 'cost'])
-    const brandIndex = getColumnIndex(['brand', 'manufacturer'])
-    const idIndex = getColumnIndex(['id', 'product_id', 'sku', 'gtin'])
-    const availabilityIndex = getColumnIndex(['availability', 'stock_status', 'in_stock'])
+    const titleIndex = getColumnIndex(['title', 'name', 'product_name', 'product_title', 'item_name'])
+    const descriptionIndex = getColumnIndex(['description', 'desc', 'product_description', 'item_description'])
+    const imageIndex = getColumnIndex(['image_link', 'image', 'image_url', 'imageUrl', 'product_image', 'item_image', 'picture_url'])
+    const linkIndex = getColumnIndex(['link', 'url', 'affiliate_link', 'product_url', 'item_url', 'product_link'])
+    const priceIndex = getColumnIndex(['price', 'sale_price', 'cost', 'item_price', 'product_price', 'final_price', 'current_price'])
+    const brandIndex = getColumnIndex(['brand', 'manufacturer', 'vendor', 'brand_name'])
+    const idIndex = getColumnIndex(['id', 'product_id', 'sku', 'gtin', 'item_id', 'product_sku', 'variant_id'])
+    const availabilityIndex = getColumnIndex(['availability', 'stock_status', 'in_stock', 'inventory_status', 'stock', 'available'])
+    
+    console.log('Column mapping:', {
+      title: titleIndex,
+      price: priceIndex,
+      description: descriptionIndex,
+      image: imageIndex,
+      link: linkIndex,
+      brand: brandIndex,
+      id: idIndex,
+      availability: availabilityIndex
+    })
     
     if (titleIndex === -1 || priceIndex === -1) {
       console.error('CSV feed missing required columns (title or price)')
+      console.error('Available headers:', headers)
+      console.error('First data row sample:', lines.length > 1 ? parseCSVLine(lines[1]) : 'No data rows')
       return []
     }
     
     const products = []
     
     // Parse data rows
+    let skippedCount = 0
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i]
       if (!line.trim()) continue
       
       try {
         const values = parseCSVLine(line)
+        
+        // Ensure we have enough values
+        if (values.length < Math.max(titleIndex, priceIndex) + 1) {
+          if (i <= 3) {
+            console.warn(`Row ${i} has insufficient columns: expected at least ${Math.max(titleIndex, priceIndex) + 1}, got ${values.length}`)
+          }
+          skippedCount++
+          continue
+        }
         
         const title = values[titleIndex]?.trim()
         const price = values[priceIndex]?.trim()
@@ -266,6 +294,9 @@ function parseCSVFeed(csvText: string, brandName: string = 'Unknown') {
     }
     
     console.log('Total products parsed:', products.length)
+    if (skippedCount > 0) {
+      console.log(`Skipped ${skippedCount} rows due to insufficient columns or missing data`)
+    }
     return products
   } catch (error) {
     console.error('Error parsing CSV feed:', error)
