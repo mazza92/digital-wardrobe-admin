@@ -235,7 +235,7 @@ export default function ProductSearch({ onSelectProduct, onClose, isOpen }: Prod
                       
                       <div className="flex items-center justify-between">
                         <span className="text-lg font-semibold text-gray-900">
-                          {parseFloat(product.price).toFixed(1)} €
+                          {parseFloat(product.price).toFixed(2)} €
                         </span>
                         <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
                           {product.category}
