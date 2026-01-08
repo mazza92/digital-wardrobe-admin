@@ -195,18 +195,51 @@ function parseCSVFeed(csvText: string, brandName: string = 'Unknown') {
       return -1
     }
     
-    const titleIndex = getColumnIndex(['title', 'name', 'product_name', 'product_title', 'item_name'])
-    const descriptionIndex = getColumnIndex(['description', 'desc', 'product_description', 'item_description'])
-    const imageIndex = getColumnIndex(['image_link', 'image', 'image_url', 'imageUrl', 'product_image', 'item_image', 'picture_url'])
-    const linkIndex = getColumnIndex(['link', 'url', 'affiliate_link', 'product_url', 'item_url', 'product_link'])
-    const priceIndex = getColumnIndex(['price', 'sale_price', 'cost', 'item_price', 'product_price', 'final_price', 'current_price'])
-    const brandIndex = getColumnIndex(['brand', 'manufacturer', 'vendor', 'brand_name'])
-    const idIndex = getColumnIndex(['id', 'product_id', 'sku', 'gtin', 'item_id', 'product_sku', 'variant_id'])
-    const availabilityIndex = getColumnIndex(['availability', 'stock_status', 'in_stock', 'inventory_status', 'stock', 'available'])
+    // Support both English and French column names
+    const titleIndex = getColumnIndex([
+      'title', 'name', 'product_name', 'product_title', 'item_name',
+      'nom du produit', 'nom produit', 'titre', 'titre produit', 'nom'
+    ])
+    const descriptionIndex = getColumnIndex([
+      'description', 'desc', 'product_description', 'item_description',
+      'description du produit', 'description produit', 'desc produit'
+    ])
+    const imageIndex = getColumnIndex([
+      'image_link', 'image', 'image_url', 'imageUrl', 'product_image', 'item_image', 'picture_url',
+      'lien image', 'image lien', 'url image', 'photo', 'photo produit'
+    ])
+    const linkIndex = getColumnIndex([
+      'link', 'url', 'affiliate_link', 'product_url', 'item_url', 'product_link',
+      'url du produit', 'url produit', 'lien', 'lien produit', 'lien affilie'
+    ])
+    // Try to find sale price first, then regular price
+    const salePriceIndex = getColumnIndex([
+      'sale_price', 'final_price', 'current_price', 'discounted_price',
+      'prix soldes', 'prix final', 'prix reduit', 'prix actuel', 'prix promo'
+    ])
+    const priceIndex = salePriceIndex !== -1 
+      ? salePriceIndex 
+      : getColumnIndex([
+          'price', 'cost', 'item_price', 'product_price',
+          'prix', 'prix produit', 'prix normal'
+        ])
+    const brandIndex = getColumnIndex([
+      'brand', 'manufacturer', 'vendor', 'brand_name',
+      'marque', 'fabricant', 'marque produit'
+    ])
+    const idIndex = getColumnIndex([
+      'id', 'product_id', 'sku', 'gtin', 'item_id', 'product_sku', 'variant_id',
+      'id unique', 'id produit', 'reference', 'ref', 'code produit'
+    ])
+    const availabilityIndex = getColumnIndex([
+      'availability', 'stock_status', 'in_stock', 'inventory_status', 'stock', 'available',
+      'stock', 'disponibilite', 'en stock', 'disponible', 'statut stock'
+    ])
     
     console.log('Column mapping:', {
       title: titleIndex,
       price: priceIndex,
+      salePrice: salePriceIndex !== -1 ? salePriceIndex : 'not found, using regular price',
       description: descriptionIndex,
       image: imageIndex,
       link: linkIndex,
