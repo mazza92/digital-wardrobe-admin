@@ -202,7 +202,7 @@ function parseCSVFeed(csvText: string, brandName: string = 'Unknown') {
       'nom du produit', 'nom produit', 'titre', 'titre produit', 'nom'
     ])
     const descriptionIndex = getColumnIndex([
-      'description', 'desc', 'product_description', 'item_description',
+      'description', 'desc', 'product_description', 'item_description', 'long_description',
       'description du produit', 'description produit', 'desc produit'
     ])
     const imageIndex = getColumnIndex([
@@ -224,6 +224,9 @@ function parseCSVFeed(csvText: string, brandName: string = 'Unknown') {
     ])
     // Use sale price if available, otherwise use regular price
     const priceIndex = salePriceIndex !== -1 ? salePriceIndex : regularPriceIndex
+    // Also keep track of both indices for fallback
+    const hasSalePrice = salePriceIndex !== -1
+    const hasRegularPrice = regularPriceIndex !== -1
     const brandIndex = getColumnIndex([
       'brand', 'manufacturer', 'vendor', 'brand_name',
       'marque', 'fabricant', 'marque produit'
@@ -287,7 +290,11 @@ function parseCSVFeed(csvText: string, brandName: string = 'Unknown') {
         }
         
         const title = values[titleIndex]?.trim()
-        const price = values[priceIndex]?.trim()
+        // Try sale price first, fallback to regular price if sale price is empty
+        let price = hasSalePrice && values[salePriceIndex]?.trim() ? values[salePriceIndex]?.trim() : ''
+        if (!price && hasRegularPrice) {
+          price = values[regularPriceIndex]?.trim()
+        }
         const description = descriptionIndex !== -1 ? values[descriptionIndex]?.trim() : ''
         const imageLink = imageIndex !== -1 ? values[imageIndex]?.trim() : ''
         const link = linkIndex !== -1 ? values[linkIndex]?.trim() : ''
@@ -311,13 +318,15 @@ function parseCSVFeed(csvText: string, brandName: string = 'Unknown') {
             continue
           }
           
+          const validImageUrl = isValidImageUrl(imageLink) ? imageLink : ''
+          
           const product = {
             id: id,
             name: title,
             brand: brand || brandName,
             price: cleanPrice,
             description: description || `Beautiful product from ${brandName}`,
-            imageUrl: isValidImageUrl(imageLink) ? imageLink : '',
+            imageUrl: validImageUrl,
             affiliateLink: link || '',
             category: extractCategoryFromTitle(title),
             availability: availability === 'in stock' || availability === 'available' ? 'in stock' : 'out of stock'
@@ -325,7 +334,7 @@ function parseCSVFeed(csvText: string, brandName: string = 'Unknown') {
           
           products.push(product)
           if (products.length <= 5) {
-            console.log('✅ Added product:', product.name, product.price, 'Image URL:', product.imageUrl)
+            console.log('✅ Added product:', product.name, product.price, 'Image URL:', product.imageUrl || 'NO IMAGE', 'Original:', imageLink)
           }
         } else {
           if (i <= 5) {
