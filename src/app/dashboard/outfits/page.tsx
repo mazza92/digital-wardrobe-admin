@@ -1832,6 +1832,23 @@ export default function OutfitsPage() {
                 />
               </div>
 
+              {/* Product URL Input */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  URL du Produit <span className="text-gray-400 font-normal text-xs">(optionnel - sera converti en lien ShopMy)</span>
+                </label>
+                <input
+                  type="url"
+                  value={currentTag.affiliateLink || ''}
+                  onChange={(e) => setCurrentTag(prev => ({ ...prev, affiliateLink: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-base"
+                  placeholder="ex: https://www.zara.com/fr/fr/product/..."
+                />
+                <p className="mt-2 text-xs text-gray-500">
+                  Si vous laissez ce champ vide, vous pouvez rechercher dans le catalogue ci-dessus. Sinon, entrez l'URL directe du produit (elle sera automatiquement convertie en lien ShopMy).
+                </p>
+              </div>
+
               {/* Quick Actions */}
               <div className="flex flex-wrap gap-2 mb-4">
                 {draftOutfit && (
