@@ -136,11 +136,17 @@ function parseXMLFeed(xmlText: string, brandName: string = 'Unknown') {
         const brand = extractXMLValue(item, 'g:brand') || extractXMLValue(item, 'brand') || brandName
         
         if (title && price) {
+          // Format price to 1 decimal place
+          let cleanPrice = price.trim().replace(/\s*(EUR|€|USD|\$|GBP|£)\s*/gi, '').replace(',', '.')
+          cleanPrice = cleanPrice.replace(/[^\d.]/g, '')
+          const priceNum = parseFloat(cleanPrice)
+          const formattedPrice = isNaN(priceNum) ? price : priceNum.toFixed(1)
+          
           const product = {
             id: id,
             name: title,
             brand: brand,
-            price: price,
+            price: formattedPrice,
             description: description || `Beautiful product from ${brandName}`,
             imageUrl: isValidImageUrl(imageLink) ? imageLink : '',
             affiliateLink: link || '',
@@ -318,13 +324,17 @@ function parseCSVFeed(csvText: string, brandName: string = 'Unknown') {
             continue
           }
           
+          // Format price to 1 decimal place (e.g., 20.0, 23.2 -> 20.0, 23.2)
+          const priceNum = parseFloat(cleanPrice)
+          const formattedPrice = priceNum.toFixed(1)
+          
           const validImageUrl = isValidImageUrl(imageLink) ? imageLink : ''
           
           const product = {
             id: id,
             name: title,
             brand: brand || brandName,
-            price: cleanPrice,
+            price: formattedPrice,
             description: description || `Beautiful product from ${brandName}`,
             imageUrl: validImageUrl,
             affiliateLink: link || '',

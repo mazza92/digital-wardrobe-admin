@@ -1730,10 +1730,21 @@ export default function OutfitsPage() {
 
             <div className="space-y-5">
 
+              {/* Search Products Button - Moved to top for better UX */}
+              <div className="flex justify-center pb-2 border-b border-gray-200">
+                <button
+                  onClick={() => setShowProductSearch(true)}
+                  className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-semibold shadow-sm"
+                >
+                  <ShoppingBag className="h-5 w-5" />
+                  Rechercher dans le catalogue
+                </button>
+              </div>
+
               {/* Brand Input with Suggestions */}
               <div className="relative">
                 <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  Nom de la Marque
+                  Nom de la Marque <span className="text-gray-400 font-normal text-xs">(optionnel)</span>
                 </label>
                 <input
                   type="text"
@@ -1742,7 +1753,6 @@ export default function OutfitsPage() {
                   onFocus={() => handleInputFocus('brand')}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-base"
                   placeholder="ex: ZARA"
-                  autoFocus
                 />
                 {showSuggestions && suggestionType === 'brand' && (
                   <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 overflow-y-auto">
@@ -1765,17 +1775,6 @@ export default function OutfitsPage() {
                       ))}
                   </div>
                 )}
-              </div>
-
-              {/* Search Products Button */}
-              <div className="flex justify-center">
-                <button
-                  onClick={() => setShowProductSearch(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium"
-                >
-                  <ShoppingBag className="h-4 w-4" />
-                  Rechercher dans le catalogue
-                </button>
               </div>
 
               {/* Product Name with Suggestions */}
